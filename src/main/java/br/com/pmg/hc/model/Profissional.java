@@ -1,45 +1,79 @@
 package br.com.pmg.hc.model;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "profissionais")
-@PrimaryKeyJoinColumn(name = "usuario_id")
-public class Profissional extends Usuario {
+@Table(name = "T_TDSPW_PGR_PROFISSIONAL_SAUDE")
+public class Profissional {
 
-    @Column(nullable = false)
-    private String especialidade;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_profissional")
+    private Long id;
 
-    @Column(name = "registro_profissional", nullable = false, unique = true)
-    private String registroProfissional;
+    @OneToOne(optional = false, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "id_usuario", unique = true, nullable = false)
+    private Usuario usuario;
 
-    @Column(nullable = false)
-    private String telefone;
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "id_tipo_profissional", nullable = false)
+    private TipoProfissionalSaude tipoProfissional;
 
-    public String getEspecialidade() {
-        return especialidade;
+    @Column(length = 20, unique = true)
+    private String crm;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private StatusCadastro status = StatusCadastro.ATIVO;
+
+    public Long getId() {
+        return id;
     }
 
-    public void setEspecialidade(String especialidade) {
-        this.especialidade = especialidade;
+    public void setId(Long id) {
+        this.id = id;
     }
 
-    public String getRegistroProfissional() {
-        return registroProfissional;
+    public Usuario getUsuario() {
+        return usuario;
     }
 
-    public void setRegistroProfissional(String registroProfissional) {
-        this.registroProfissional = registroProfissional;
+    public void setUsuario(Usuario usuario) {
+        this.usuario = usuario;
     }
 
-    public String getTelefone() {
-        return telefone;
+    public TipoProfissionalSaude getTipoProfissional() {
+        return tipoProfissional;
     }
 
-    public void setTelefone(String telefone) {
-        this.telefone = telefone;
+    public void setTipoProfissional(TipoProfissionalSaude tipoProfissional) {
+        this.tipoProfissional = tipoProfissional;
+    }
+
+    public String getCrm() {
+        return crm;
+    }
+
+    public void setCrm(String crm) {
+        this.crm = crm;
+    }
+
+    public StatusCadastro getStatus() {
+        return status;
+    }
+
+    public void setStatus(StatusCadastro status) {
+        this.status = status;
     }
 }

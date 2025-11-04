@@ -2,7 +2,7 @@ package br.com.pmg.hc.model;
 
 public enum StatusConsulta {
     AGENDADA,
-    CONFIRMADA,
+    REALIZADA,
     CANCELADA,
-    CONCLUIDA
+    FALTOU
 }

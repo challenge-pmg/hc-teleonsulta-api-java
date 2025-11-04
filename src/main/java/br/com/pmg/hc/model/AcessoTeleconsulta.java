@@ -13,30 +13,29 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "T_TDSPW_PGR_FEEDBACK_CONSULTA")
-public class Feedback {
+@Table(name = "T_TDSPW_PGR_ACESSO_TELECONSULTA")
+public class AcessoTeleconsulta {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_feedback")
+    @Column(name = "id_acesso")
     private Long id;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "id_consulta", nullable = false)
     private Consulta consulta;
 
-    @Column(nullable = false, name = "nota")
-    private Integer nota;
+    @Column(name = "horario_acesso")
+    private LocalDateTime horarioAcesso;
 
-    @Column(length = 255)
-    private String comentario;
-
-    @Column(name = "criado_em", nullable = false)
-    private LocalDateTime criadoEm;
+    @Column(length = 50)
+    private String resultado;
 
     @PrePersist
-    protected void onCreate() {
-        this.criadoEm = LocalDateTime.now();
+    void prePersist() {
+        if (this.horarioAcesso == null) {
+            this.horarioAcesso = LocalDateTime.now();
+        }
     }
 
     public Long getId() {
@@ -55,27 +54,19 @@ public class Feedback {
         this.consulta = consulta;
     }
 
-    public Integer getNota() {
-        return nota;
+    public LocalDateTime getHorarioAcesso() {
+        return horarioAcesso;
     }
 
-    public void setNota(Integer nota) {
-        this.nota = nota;
+    public void setHorarioAcesso(LocalDateTime horarioAcesso) {
+        this.horarioAcesso = horarioAcesso;
     }
 
-    public String getComentario() {
-        return comentario;
+    public String getResultado() {
+        return resultado;
     }
 
-    public void setComentario(String comentario) {
-        this.comentario = comentario;
-    }
-
-    public LocalDateTime getCriadoEm() {
-        return criadoEm;
-    }
-
-    public void setCriadoEm(LocalDateTime criadoEm) {
-        this.criadoEm = criadoEm;
+    public void setResultado(String resultado) {
+        this.resultado = resultado;
     }
 }
