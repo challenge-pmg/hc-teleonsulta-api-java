@@ -1,78 +1,46 @@
-# hc-teleconsulta-api
+# HC Teleconsulta API
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+API REST construída com Quarkus 3.29.0 e Java 21 para gerenciar pacientes, profissionais, consultas e feedbacks da sprint 4 do projeto HC Teleconsulta.
 
-If you want to learn more about Quarkus, please visit its website: <https://quarkus.io/>.
+## ✅ Pré-requisitos
+- Java 21 instalado
+- Maven 3.9+
+- Acesso à VPN/whitelist da FIAP para conectar no banco Oracle
 
-## Running the application in dev mode
+## 🚀 Executando em ambiente local
+1. Instale as dependências e suba a aplicação em modo dev:
+   ```bash
+   ./mvnw clean quarkus:dev
+   ```
+2. A API ficará disponível em `http://localhost:8080` e o Swagger em `http://localhost:8080/q/swagger-ui`.
 
-You can run your application in dev mode that enables live coding using:
+> A aplicação utiliza o banco de dados Oracle da FIAP. As credenciais já estão configuradas em `src/main/resources/application.properties`.
 
-```shell script
-./mvnw quarkus:dev
+## 🌐 Integração com o front-end
+- O front-end em React + Vite + Tailwind ainda **não foi deployado**.
+- Durante o desenvolvimento, as requisições serão originadas de `http://localhost:5173`. Essa URL já está liberada via CORS.
+- Quando o front for publicado (por exemplo, na Vercel), basta adicionar a nova origem no `application.properties`, na propriedade `quarkus.http.cors.origins`.
+
+## 🧱 Tecnologias e extensões utilizadas
+- Quarkus REST (`quarkus-rest`, `quarkus-rest-jackson`)
+- Hibernate ORM & Validator
+- Agroal Connection Pool
+- JDBC Oracle
+- SmallRye OpenAPI
+
+## 📁 Estrutura principal
+```
+src/main/java/br/com/pmg/hc/
+├── model/
+├── dao/
+├── service/
+├── resource/
+├── exception/
+└── dto/
 ```
 
-> **_NOTE:_**  Quarkus now ships with a Dev UI, which is available in dev mode only at <http://localhost:8080/q/dev/>.
+## 🔒 Controle de acesso
+O modelo de domínio utiliza herança de `Usuario` para `Paciente` e `Profissional`, com atribuição de roles (`ADMIN`, `PACIENTE`, `PROFISSIONAL`).
 
-## Packaging and running the application
-
-The application can be packaged using:
-
-```shell script
-./mvnw package
-```
-
-It produces the `quarkus-run.jar` file in the `target/quarkus-app/` directory.
-Be aware that it’s not an _über-jar_ as the dependencies are copied into the `target/quarkus-app/lib/` directory.
-
-The application is now runnable using `java -jar target/quarkus-app/quarkus-run.jar`.
-
-If you want to build an _über-jar_, execute the following command:
-
-```shell script
-./mvnw package -Dquarkus.package.jar.type=uber-jar
-```
-
-The application, packaged as an _über-jar_, is now runnable using `java -jar target/*-runner.jar`.
-
-## Creating a native executable
-
-You can create a native executable using:
-
-```shell script
-./mvnw package -Dnative
-```
-
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using:
-
-```shell script
-./mvnw package -Dnative -Dquarkus.native.container-build=true
-```
-
-You can then execute your native executable with: `./target/hc-teleconsulta-api-1.0.0-SNAPSHOT-runner`
-
-If you want to learn more about building native executables, please consult <https://quarkus.io/guides/maven-tooling>.
-
-## Related Guides
-
-- Hibernate ORM ([guide](https://quarkus.io/guides/hibernate-orm)): Define your persistent model with Hibernate ORM and Jakarta Persistence
-- Hibernate Validator ([guide](https://quarkus.io/guides/validation)): Validate object properties (field, getter) and method parameters for your beans (REST, CDI, Jakarta Persistence)
-- REST Jackson ([guide](https://quarkus.io/guides/rest#json-serialisation)): Jackson serialization support for Quarkus REST. This extension is not compatible with the quarkus-resteasy extension, or any of the extensions that depend on it
-- Agroal - DB connection pool ([guide](https://quarkus.io/guides/datasource)): JDBC Datasources and connection pooling
-- JDBC Driver - Oracle ([guide](https://quarkus.io/guides/datasource)): Connect to the Oracle database via JDBC
-
-## Provided Code
-
-### Hibernate ORM
-
-Create your first JPA entity
-
-[Related guide section...](https://quarkus.io/guides/hibernate-orm)
-
-
-
-### REST
-
-Easily start your REST Web Services
-
-[Related guide section...](https://quarkus.io/guides/getting-started-reactive#reactive-jax-rs-resources)
+## 🧪 Testes
+Ainda não há suíte automatizada. Utilize ferramentas como Insomnia ou Postman para validar as rotas expostas.
