@@ -1,18 +1,17 @@
 package br.com.pmg.hc.dto;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
-import br.com.pmg.hc.model.Role;
+import br.com.pmg.hc.model.Sexo;
+import br.com.pmg.hc.model.StatusCadastro;
 
 public record PacienteResponse(
         Long id,
-        String nome,
-        String email,
-        Role role,
+        UsuarioResumo usuario,
         String cpf,
+        Sexo sexo,
         LocalDate dataNascimento,
         String telefone,
-        LocalDateTime criadoEm,
-        LocalDateTime atualizadoEm) {
+        String cidade,
+        StatusCadastro status) {
 }

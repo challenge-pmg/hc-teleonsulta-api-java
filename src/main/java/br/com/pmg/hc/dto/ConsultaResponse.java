@@ -3,12 +3,16 @@ package br.com.pmg.hc.dto;
 import java.time.LocalDateTime;
 
 import br.com.pmg.hc.model.StatusConsulta;
+import br.com.pmg.hc.model.TipoConsulta;
 
 public record ConsultaResponse(
         Long id,
-        PacienteResponse paciente,
-        ProfissionalResponse profissional,
+        PacienteConsultaResumo paciente,
+        ProfissionalConsultaResumo profissional,
         LocalDateTime dataHora,
-        String descricao,
-        StatusConsulta status) {
+        TipoConsulta tipoConsulta,
+        String linkAcesso,
+        StatusConsulta status,
+        Long usuarioAgendadorId,
+        LocalDateTime criadoEm) {
 }
