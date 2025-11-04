@@ -28,7 +28,40 @@ public class FeedbackDAO {
     }
 
     public List<Feedback> findAll() {
-        return entityManager.createQuery("from Feedback", Feedback.class).getResultList();
+        return entityManager.createQuery("""
+                select f from Feedback f
+                join fetch f.consulta c
+                join fetch c.paciente p
+                join fetch p.usuario
+                join fetch c.profissional pr
+                join fetch pr.usuario
+                join fetch pr.tipoProfissional
+                """, Feedback.class).getResultList();
+    }
+
+    public List<Feedback> findByPacienteUsuario(Long usuarioId) {
+        var query = entityManager.createQuery("""
+                select f from Feedback f
+                join fetch f.consulta c
+                join fetch c.paciente p
+                join fetch p.usuario u
+                join fetch c.profissional pr
+                join fetch pr.usuario
+                join fetch pr.tipoProfissional
+                where u.id = :usuarioId
+                """, Feedback.class);
+        query.setParameter("usuarioId", usuarioId);
+        return query.getResultList();
+    }
+
+    public Optional<Feedback> findByConsultaId(Long consultaId) {
+        var query = entityManager.createQuery("""
+                select f from Feedback f
+                join fetch f.consulta c
+                where c.id = :consultaId
+                """, Feedback.class);
+        query.setParameter("consultaId", consultaId);
+        return query.getResultStream().findFirst();
     }
 
     public void delete(Feedback feedback) {

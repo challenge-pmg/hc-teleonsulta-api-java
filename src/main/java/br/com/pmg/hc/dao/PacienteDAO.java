@@ -27,8 +27,21 @@ public class PacienteDAO {
         return Optional.ofNullable(entityManager.find(Paciente.class, id));
     }
 
+    public Optional<Paciente> findByUsuarioId(Long usuarioId) {
+        var query = entityManager.createQuery("""
+                select p from Paciente p
+                join fetch p.usuario u
+                where u.id = :usuarioId
+                """, Paciente.class);
+        query.setParameter("usuarioId", usuarioId);
+        return query.getResultStream().findFirst();
+    }
+
     public List<Paciente> findAll() {
-        return entityManager.createQuery("from Paciente", Paciente.class).getResultList();
+        return entityManager.createQuery("""
+                select p from Paciente p
+                join fetch p.usuario
+                """, Paciente.class).getResultList();
     }
 
     public void delete(Paciente paciente) {
@@ -37,8 +50,22 @@ public class PacienteDAO {
     }
 
     public Optional<Paciente> findByEmail(String email) {
-        var query = entityManager.createQuery("from Paciente where email = :email", Paciente.class);
-        query.setParameter("email", email);
+        var query = entityManager.createQuery("""
+                select p from Paciente p
+                join fetch p.usuario u
+                where upper(u.email) = :email
+                """, Paciente.class);
+        query.setParameter("email", email.toUpperCase());
+        return query.getResultStream().findFirst();
+    }
+
+    public Optional<Paciente> findByCpf(String cpf) {
+        var query = entityManager.createQuery("""
+                select p from Paciente p
+                join fetch p.usuario
+                where p.cpf = :cpf
+                """, Paciente.class);
+        query.setParameter("cpf", cpf);
         return query.getResultStream().findFirst();
     }
 }
