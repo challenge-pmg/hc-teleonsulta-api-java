@@ -44,3 +44,17 @@ O modelo de domínio utiliza herança de `Usuario` para `Paciente` e `Profission
 
 ## 🧪 Testes
 Ainda não há suíte automatizada. Utilize ferramentas como Insomnia ou Postman para validar as rotas expostas.
+
+## Banco de Dados (Oracle) — Sprint 4
+Ordem de execução para correção:
+a) Abrir o arquivo `db/ddl/create_pgr_sprint4.sql` no SQL Developer (ou SQL*Plus) e executar.
+b) Ajustar `src/main/resources/application.properties` com as credenciais (se necessário).
+c) Rodar a API: `mvn clean quarkus:dev`.
+d) (Opcional para reset) Executar `db/ddl/drop_pgr_sprint4.sql` e depois o CREATE novamente.
+
+Exemplo de execução no SQL*Plus:
+```
+sqlplus rm562312/fiap25@//oracle.fiap.com.br:1521/orcl @db/ddl/create_pgr_sprint4.sql
+```
+
+> O front-end ainda não foi deployado; durante a sprint, use `http://localhost:5173` (CORS) para testes locais.
