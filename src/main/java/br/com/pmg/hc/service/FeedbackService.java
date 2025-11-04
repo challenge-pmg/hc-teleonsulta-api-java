@@ -1,4 +1,4 @@
-package br.com.pmg.hc.service;
+﻿package br.com.pmg.hc.service;
 
 import java.util.List;
 
@@ -7,10 +7,13 @@ import br.com.pmg.hc.dao.FeedbackDAO;
 import br.com.pmg.hc.dto.ConsultaResponse;
 import br.com.pmg.hc.dto.FeedbackRequest;
 import br.com.pmg.hc.dto.FeedbackResponse;
-import br.com.pmg.hc.dto.PacienteResponse;
-import br.com.pmg.hc.dto.ProfissionalResponse;
+import br.com.pmg.hc.exception.BusinessException;
 import br.com.pmg.hc.exception.ResourceNotFoundException;
+import br.com.pmg.hc.model.Consulta;
 import br.com.pmg.hc.model.Feedback;
+import br.com.pmg.hc.model.Role;
+import br.com.pmg.hc.model.StatusConsulta;
+import br.com.pmg.hc.model.Usuario;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -25,9 +28,14 @@ public class FeedbackService {
     ConsultaDAO consultaDAO;
 
     @Transactional
-    public FeedbackResponse criar(FeedbackRequest request) {
-        var consulta = consultaDAO.findById(request.consultaId())
-                .orElseThrow(() -> new ResourceNotFoundException("Consulta não encontrada"));
+    public FeedbackResponse criar(Usuario solicitante, FeedbackRequest request) {
+        var consulta = obterConsulta(request.consultaId());
+        garantirPermissaoCriarFeedback(solicitante, consulta);
+        garantirConsultaElegivelParaFeedback(consulta);
+
+        feedbackDAO.findByConsultaId(consulta.getId()).ifPresent(f -> {
+            throw new BusinessException("Consulta ja possui feedback");
+        });
 
         var feedback = new Feedback();
         feedback.setConsulta(consulta);
@@ -35,79 +43,113 @@ public class FeedbackService {
         feedback.setComentario(request.comentario());
 
         feedbackDAO.persist(feedback);
-        return toResponse(feedback);
+        return toResponse(feedback, solicitante);
     }
 
     @Transactional
-    public FeedbackResponse atualizar(Long id, FeedbackRequest request) {
-        var feedback = feedbackDAO.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Feedback não encontrado"));
+    public FeedbackResponse atualizar(Long id, Usuario solicitante, FeedbackRequest request) {
+        var feedback = obterFeedback(id);
+        var consulta = feedback.getConsulta();
 
-        var consulta = consultaDAO.findById(request.consultaId())
-                .orElseThrow(() -> new ResourceNotFoundException("Consulta não encontrada"));
+        garantirPermissaoAlterarFeedback(solicitante, consulta);
+        garantirConsultaElegivelParaFeedback(consulta);
 
-        feedback.setConsulta(consulta);
+        if (!consulta.getId().equals(request.consultaId())) {
+            throw new BusinessException("Nao e possivel mover o feedback para outra consulta");
+        }
+
         feedback.setNota(request.nota());
         feedback.setComentario(request.comentario());
 
         var atualizado = feedbackDAO.merge(feedback);
-        return toResponse(atualizado);
+        return toResponse(atualizado, solicitante);
     }
 
     @Transactional(Transactional.TxType.SUPPORTS)
-    public FeedbackResponse buscarPorId(Long id) {
-        var feedback = feedbackDAO.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Feedback não encontrado"));
-        return toResponse(feedback);
+    public FeedbackResponse buscarPorId(Long id, Usuario solicitante) {
+        var feedback = obterFeedback(id);
+        garantirPermissaoVisualizarFeedback(solicitante, feedback.getConsulta());
+        return toResponse(feedback, solicitante);
     }
 
     @Transactional(Transactional.TxType.SUPPORTS)
-    public List<FeedbackResponse> listarTodos() {
-        return feedbackDAO.findAll().stream().map(this::toResponse).toList();
+    public List<FeedbackResponse> listar(Usuario solicitante) {
+        if (solicitante.getRole() == Role.ADMIN) {
+            return feedbackDAO.findAll().stream()
+                    .map(f -> toResponse(f, solicitante))
+                    .toList();
+        }
+        if (solicitante.getRole() == Role.PACIENTE) {
+            return feedbackDAO.findByPacienteUsuario(solicitante.getId()).stream()
+                    .map(f -> toResponse(f, solicitante))
+                    .toList();
+        }
+        throw new BusinessException("Usuario sem permissao para visualizar feedbacks");
     }
 
     @Transactional
-    public void remover(Long id) {
-        var feedback = feedbackDAO.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Feedback não encontrado"));
+    public void remover(Long id, Usuario solicitante) {
+        garantirRole(solicitante, Role.ADMIN);
+        var feedback = obterFeedback(id);
         feedbackDAO.delete(feedback);
     }
 
-    private FeedbackResponse toResponse(Feedback feedback) {
-        var consulta = feedback.getConsulta();
+    private Feedback obterFeedback(Long id) {
+        return feedbackDAO.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Feedback nao encontrado"));
+    }
+
+    private Consulta obterConsulta(Long id) {
+        return consultaDAO.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Consulta nao encontrada"));
+    }
+
+    private void garantirPermissaoCriarFeedback(Usuario solicitante, Consulta consulta) {
+        if (solicitante.getRole() != Role.PACIENTE) {
+            throw new BusinessException("Apenas pacientes podem registrar feedback");
+        }
         var paciente = consulta.getPaciente();
-        var profissional = consulta.getProfissional();
+        if (!paciente.getUsuario().getId().equals(solicitante.getId())) {
+            throw new BusinessException("Paciente nao pode registrar feedback de outra consulta");
+        }
+    }
 
-        var pacienteResponse = new PacienteResponse(
-                paciente.getId(),
-                paciente.getNome(),
-                paciente.getEmail(),
-                paciente.getRole(),
-                paciente.getCpf(),
-                paciente.getDataNascimento(),
-                paciente.getTelefone(),
-                paciente.getCriadoEm(),
-                paciente.getAtualizadoEm());
+    private void garantirPermissaoAlterarFeedback(Usuario solicitante, Consulta consulta) {
+        if (solicitante.getRole() == Role.ADMIN) {
+            return;
+        }
+        if (solicitante.getRole() == Role.PACIENTE
+                && consulta.getPaciente().getUsuario().getId().equals(solicitante.getId())) {
+            return;
+        }
+        throw new BusinessException("Usuario sem permissao para alterar o feedback");
+    }
 
-        var profissionalResponse = new ProfissionalResponse(
-                profissional.getId(),
-                profissional.getNome(),
-                profissional.getEmail(),
-                profissional.getRole(),
-                profissional.getEspecialidade(),
-                profissional.getRegistroProfissional(),
-                profissional.getTelefone(),
-                profissional.getCriadoEm(),
-                profissional.getAtualizadoEm());
+    private void garantirPermissaoVisualizarFeedback(Usuario solicitante, Consulta consulta) {
+        if (solicitante.getRole() == Role.ADMIN) {
+            return;
+        }
+        if (solicitante.getRole() == Role.PACIENTE
+                && consulta.getPaciente().getUsuario().getId().equals(solicitante.getId())) {
+            return;
+        }
+        throw new BusinessException("Usuario sem permissao para visualizar o feedback");
+    }
 
-        var consultaResponse = new ConsultaResponse(
-                consulta.getId(),
-                pacienteResponse,
-                profissionalResponse,
-                consulta.getDataHora(),
-                consulta.getDescricao(),
-                consulta.getStatus());
+    private void garantirConsultaElegivelParaFeedback(Consulta consulta) {
+        if (consulta.getStatus() != StatusConsulta.REALIZADA) {
+            throw new BusinessException("Feedback so pode ser registrado para consultas realizadas");
+        }
+    }
 
+    private void garantirRole(Usuario usuario, Role rolePermitido) {
+        if (usuario.getRole() != rolePermitido) {
+            throw new BusinessException("Usuario sem permissao para esta operacao");
+        }
+    }
+
+    private FeedbackResponse toResponse(Feedback feedback, Usuario solicitante) {
+        ConsultaResponse consultaResponse = ConsultaRepresentationBuilder.build(feedback.getConsulta(), solicitante);
         return new FeedbackResponse(
                 feedback.getId(),
                 consultaResponse,

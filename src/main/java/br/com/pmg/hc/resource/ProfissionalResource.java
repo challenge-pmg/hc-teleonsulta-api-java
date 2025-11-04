@@ -1,16 +1,19 @@
-package br.com.pmg.hc.resource;
+﻿package br.com.pmg.hc.resource;
 
 import java.net.URI;
 import java.util.List;
 
 import br.com.pmg.hc.dto.ProfissionalRequest;
 import br.com.pmg.hc.dto.ProfissionalResponse;
+import br.com.pmg.hc.model.Usuario;
 import br.com.pmg.hc.service.ProfissionalService;
+import br.com.pmg.hc.service.UsuarioService;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
@@ -27,33 +30,43 @@ public class ProfissionalResource {
     @Inject
     ProfissionalService profissionalService;
 
+    @Inject
+    UsuarioService usuarioService;
+
     @POST
-    public Response criar(@Valid ProfissionalRequest request) {
-        var response = profissionalService.criar(request);
+    public Response criar(@HeaderParam("X-Usuario-Id") Long usuarioId, @Valid ProfissionalRequest request) {
+        Usuario solicitante = usuarioService.recuperarUsuarioAutenticado(usuarioId);
+        var response = profissionalService.criar(solicitante, request);
         return Response.created(URI.create("/profissionais/" + response.id())).entity(response).build();
     }
 
     @PUT
     @Path("/{id}")
-    public ProfissionalResponse atualizar(@PathParam("id") Long id, @Valid ProfissionalRequest request) {
-        return profissionalService.atualizar(id, request);
+    public ProfissionalResponse atualizar(@HeaderParam("X-Usuario-Id") Long usuarioId,
+            @PathParam("id") Long id,
+            @Valid ProfissionalRequest request) {
+        Usuario solicitante = usuarioService.recuperarUsuarioAutenticado(usuarioId);
+        return profissionalService.atualizar(id, solicitante, request);
     }
 
     @GET
-    public List<ProfissionalResponse> listar() {
-        return profissionalService.listarTodos();
+    public List<ProfissionalResponse> listar(@HeaderParam("X-Usuario-Id") Long usuarioId) {
+        Usuario solicitante = usuarioService.recuperarUsuarioAutenticado(usuarioId);
+        return profissionalService.listarTodos(solicitante);
     }
 
     @GET
     @Path("/{id}")
-    public ProfissionalResponse buscarPorId(@PathParam("id") Long id) {
-        return profissionalService.buscarPorId(id);
+    public ProfissionalResponse buscarPorId(@HeaderParam("X-Usuario-Id") Long usuarioId, @PathParam("id") Long id) {
+        Usuario solicitante = usuarioService.recuperarUsuarioAutenticado(usuarioId);
+        return profissionalService.buscarPorId(id, solicitante);
     }
 
     @DELETE
     @Path("/{id}")
-    public Response remover(@PathParam("id") Long id) {
-        profissionalService.remover(id);
+    public Response remover(@HeaderParam("X-Usuario-Id") Long usuarioId, @PathParam("id") Long id) {
+        Usuario solicitante = usuarioService.recuperarUsuarioAutenticado(usuarioId);
+        profissionalService.remover(id, solicitante);
         return Response.noContent().build();
     }
 }
