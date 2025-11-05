@@ -1,4 +1,4 @@
-﻿package br.com.pmg.hc.service;
+package br.com.pmg.hc.service;
 
 import java.util.List;
 
@@ -38,22 +38,22 @@ public class ProfissionalService {
 
     public ProfissionalResponse buscarPorId(Long id) {
         var profissional = profissionalDAO.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Profissional não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Profissional nao encontrado"));
         return toResponse(profissional);
     }
 
     public ProfissionalResponse criar(ProfissionalRequest request) {
         usuarioDAO.findByEmail(request.email()).ifPresent(u -> {
-            throw new BusinessException("Já existe um usuário com este e-mail");
+            throw new BusinessException("Ja existe um usuario com este e-mail");
         });
         if (request.crm() != null && !request.crm().isBlank()) {
             profissionalDAO.findByCrm(request.crm()).ifPresent(p -> {
-                throw new BusinessException("Já existe um profissional com este CRM");
+                throw new BusinessException("Ja existe um profissional com este CRM");
             });
         }
 
         TipoProfissionalSaude tipo = tipoProfissionalSaudeDAO.findById(request.tipoProfissionalId())
-                .orElseThrow(() -> new BusinessException("Tipo de profissional não encontrado"));
+                .orElseThrow(() -> new BusinessException("Tipo de profissional nao encontrado"));
 
         var usuario = new Usuario();
         usuario.setNome(request.nome());
@@ -72,24 +72,24 @@ public class ProfissionalService {
 
     public ProfissionalResponse atualizar(Long id, ProfissionalRequest request) {
         var profissional = profissionalDAO.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Profissional não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Profissional nao encontrado"));
 
         usuarioDAO.findByEmail(request.email()).ifPresent(usuario -> {
             if (!usuario.getId().equals(profissional.getUsuario().getId())) {
-                throw new BusinessException("Já existe um usuário com este e-mail");
+                throw new BusinessException("Ja existe um usuario com este e-mail");
             }
         });
 
         if (request.crm() != null && !request.crm().isBlank()) {
             profissionalDAO.findByCrm(request.crm()).ifPresent(existing -> {
                 if (!existing.getId().equals(id)) {
-                    throw new BusinessException("Já existe um profissional com este CRM");
+                    throw new BusinessException("Ja existe um profissional com este CRM");
                 }
             });
         }
 
         TipoProfissionalSaude tipo = tipoProfissionalSaudeDAO.findById(request.tipoProfissionalId())
-                .orElseThrow(() -> new BusinessException("Tipo de profissional não encontrado"));
+                .orElseThrow(() -> new BusinessException("Tipo de profissional nao encontrado"));
 
         var usuario = profissional.getUsuario();
         usuario.setNome(request.nome());
@@ -106,10 +106,10 @@ public class ProfissionalService {
 
     public void remover(Long id) {
         profissionalDAO.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Profissional não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Profissional nao encontrado"));
 
         if (consultaDAO.existsByProfissional(id)) {
-            throw new BusinessException("Não é possível remover o profissional com consultas vinculadas");
+            throw new BusinessException("Nao e possivel remover o profissional com consultas vinculadas");
         }
 
         profissionalDAO.delete(id);

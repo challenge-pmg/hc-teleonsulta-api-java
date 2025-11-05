@@ -1,4 +1,4 @@
-﻿package br.com.pmg.hc.service;
+package br.com.pmg.hc.service;
 
 import java.util.List;
 
@@ -33,16 +33,16 @@ public class PacienteService {
 
     public PacienteResponse buscarPorId(Long id) {
         var paciente = pacienteDAO.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Paciente nao encontrado"));
         return toResponse(paciente);
     }
 
     public PacienteResponse criar(PacienteRequest request) {
         usuarioDAO.findByEmail(request.email()).ifPresent(u -> {
-            throw new BusinessException("Já existe um usuário com este e-mail");
+            throw new BusinessException("Ja existe um usuario com este e-mail");
         });
         pacienteDAO.findByCpf(request.cpf()).ifPresent(p -> {
-            throw new BusinessException("Já existe um paciente com este CPF");
+            throw new BusinessException("Ja existe um paciente com este CPF");
         });
 
         var usuario = new Usuario();
@@ -65,17 +65,17 @@ public class PacienteService {
 
     public PacienteResponse atualizar(Long id, PacienteRequest request) {
         var paciente = pacienteDAO.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Paciente nao encontrado"));
 
         usuarioDAO.findByEmail(request.email()).ifPresent(usuario -> {
             if (!usuario.getId().equals(paciente.getUsuario().getId())) {
-                throw new BusinessException("Já existe um usuário com este e-mail");
+                throw new BusinessException("Ja existe um usuario com este e-mail");
             }
         });
 
         pacienteDAO.findByCpf(request.cpf()).ifPresent(existing -> {
             if (!existing.getId().equals(id)) {
-                throw new BusinessException("Já existe um paciente com este CPF");
+                throw new BusinessException("Ja existe um paciente com este CPF");
             }
         });
 
@@ -97,7 +97,7 @@ public class PacienteService {
 
     public void remover(Long id) {
         if (consultaDAO.existsByPaciente(id)) {
-            throw new BusinessException("Não é possível remover o paciente com consultas vinculadas");
+            throw new BusinessException("Nao e possivel remover o paciente com consultas vinculadas");
         }
         pacienteDAO.delete(id);
     }
@@ -117,3 +117,7 @@ public class PacienteService {
                 paciente.getStatus());
     }
 }
+
+
+
+

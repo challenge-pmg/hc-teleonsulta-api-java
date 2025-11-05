@@ -36,7 +36,7 @@ public class UsuarioDAO {
             connection.commit();
             return created;
         } catch (SQLException e) {
-            throw new DatabaseException("Erro ao criar usuário", e);
+            throw new DatabaseException("Erro ao criar usuario", e);
         }
     }
 
@@ -67,7 +67,7 @@ public class UsuarioDAO {
             update(connection, usuario);
             connection.commit();
         } catch (SQLException e) {
-            throw new DatabaseException("Erro ao atualizar usuário", e);
+            throw new DatabaseException("Erro ao atualizar usuario", e);
         }
     }
 
@@ -93,7 +93,7 @@ public class UsuarioDAO {
             delete(connection, id);
             connection.commit();
         } catch (SQLException e) {
-            throw new DatabaseException("Erro ao remover usuário", e);
+            throw new DatabaseException("Erro ao remover usuario", e);
         }
     }
 
@@ -117,7 +117,7 @@ public class UsuarioDAO {
                 return Optional.empty();
             }
         } catch (SQLException e) {
-            throw new DatabaseException("Erro ao buscar usuário", e);
+            throw new DatabaseException("Erro ao buscar usuario", e);
         }
     }
 
@@ -133,7 +133,7 @@ public class UsuarioDAO {
                 return Optional.empty();
             }
         } catch (SQLException e) {
-            throw new DatabaseException("Erro ao buscar usuário por e-mail", e);
+            throw new DatabaseException("Erro ao buscar usuario por e-mail", e);
         }
     }
 
@@ -148,7 +148,7 @@ public class UsuarioDAO {
             }
             return usuarios;
         } catch (SQLException e) {
-            throw new DatabaseException("Erro ao listar usuários", e);
+            throw new DatabaseException("Erro ao listar usuarios", e);
         }
     }
 
@@ -162,3 +162,4 @@ public class UsuarioDAO {
         return new Usuario(id, nome, email, senha, role, criadoEm);
     }
 }
+
