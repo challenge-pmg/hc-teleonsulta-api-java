@@ -5,6 +5,7 @@ import java.util.List;
 
 import br.com.pmg.hc.dto.ProfissionalRequest;
 import br.com.pmg.hc.dto.ProfissionalResponse;
+import br.com.pmg.hc.dto.TipoProfissionalSaudeRequest;
 import br.com.pmg.hc.model.TipoProfissionalSaude;
 import br.com.pmg.hc.service.ProfissionalService;
 import br.com.pmg.hc.service.TipoProfissionalSaudeService;
@@ -66,5 +67,12 @@ public class ProfissionalResource {
     @Path("/tipos")
     public List<TipoProfissionalSaude> listarTipos() {
         return tipoProfissionalSaudeService.listarTodos();
+    }
+
+    @POST
+    @Path("/tipos")
+    public Response criarTipo(@Valid TipoProfissionalSaudeRequest request) {
+        var tipo = tipoProfissionalSaudeService.criar(request);
+        return Response.created(URI.create("/profissionais/tipos/" + tipo.getId())).entity(tipo).build();
     }
 }

@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -32,15 +31,28 @@ public class TipoProfissionalSaudeDAO {
                 insert into T_TDSPW_PGR_TIPO_PROFISSIONAL_SAUDE (nome_tipo)
                 values (?)
                 """;
-        try (Connection connection = dataSource.getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            statement.setString(1, tipo.getNome());
-            statement.executeUpdate();
-            try (ResultSet keys = statement.getGeneratedKeys()) {
-                if (keys.next()) {
-                    tipo.setId(keys.getLong(1));
+        try (Connection connection = dataSource.getConnection()) {
+            connection.setAutoCommit(false);
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, tipo.getNome());
+                statement.executeUpdate();
+            }
+
+            try (PreparedStatement idQuery = connection.prepareStatement("""
+                    select id_tipo_profissional
+                    from T_TDSPW_PGR_TIPO_PROFISSIONAL_SAUDE
+                    where upper(nome_tipo) = ?
+                    order by id_tipo_profissional desc
+                    fetch first 1 row only
+                    """)) {
+                idQuery.setString(1, tipo.getNome().toUpperCase());
+                try (ResultSet rs = idQuery.executeQuery()) {
+                    if (rs.next()) {
+                        tipo.setId(rs.getLong(1));
+                    }
                 }
             }
+            connection.commit();
             return tipo;
         } catch (SQLException e) {
             throw new DatabaseException("Erro ao criar tipo de profissional", e);
