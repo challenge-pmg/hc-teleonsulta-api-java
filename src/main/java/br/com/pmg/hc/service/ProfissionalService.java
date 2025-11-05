@@ -100,8 +100,8 @@ public class ProfissionalService {
         profissional.setCrm(request.crm());
         profissional.setStatus(request.status() != null ? request.status() : StatusCadastro.ATIVO);
 
-        profissional = profissionalDAO.update(profissional);
-        return toResponse(profissional);
+        var updatedProfissional = profissionalDAO.update(profissional);
+        return toResponse(updatedProfissional);
     }
 
     public void remover(Long id) {

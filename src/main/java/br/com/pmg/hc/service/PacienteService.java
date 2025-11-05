@@ -91,8 +91,8 @@ public class PacienteService {
         paciente.setCidade(request.cidade());
         paciente.setStatus(request.status() != null ? request.status() : StatusCadastro.ATIVO);
 
-        paciente = pacienteDAO.update(paciente);
-        return toResponse(paciente);
+        var pacienteAtualizado = pacienteDAO.update(paciente);
+        return toResponse(pacienteAtualizado);
     }
 
     public void remover(Long id) {
