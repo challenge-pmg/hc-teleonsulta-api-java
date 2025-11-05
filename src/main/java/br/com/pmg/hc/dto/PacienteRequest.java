@@ -1,4 +1,4 @@
-package br.com.pmg.hc.dto;
+﻿package br.com.pmg.hc.dto;
 
 import java.time.LocalDate;
 

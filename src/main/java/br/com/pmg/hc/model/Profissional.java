@@ -1,41 +1,24 @@
-package br.com.pmg.hc.model;
+﻿package br.com.pmg.hc.model;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
-
-@Entity
-@Table(name = "T_TDSPW_PGR_PROFISSIONAL_SAUDE")
 public class Profissional {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_profissional")
     private Long id;
-
-    @OneToOne(optional = false, cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "id_usuario", unique = true, nullable = false)
     private Usuario usuario;
-
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "id_tipo_profissional", nullable = false)
     private TipoProfissionalSaude tipoProfissional;
-
-    @Column(length = 20, unique = true)
     private String crm;
+    private StatusCadastro status;
 
-    @Enumerated(EnumType.STRING)
-    @Column(length = 20)
-    private StatusCadastro status = StatusCadastro.ATIVO;
+    public Profissional() {
+    }
+
+    public Profissional(Long id, Usuario usuario, TipoProfissionalSaude tipoProfissional, String crm,
+            StatusCadastro status) {
+        this.id = id;
+        this.usuario = usuario;
+        this.tipoProfissional = tipoProfissional;
+        this.crm = crm;
+        this.status = status;
+    }
 
     public Long getId() {
         return id;

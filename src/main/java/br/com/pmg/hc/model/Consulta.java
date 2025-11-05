@@ -1,60 +1,34 @@
-package br.com.pmg.hc.model;
+﻿package br.com.pmg.hc.model;
 
 import java.time.LocalDateTime;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
-
-@Entity
-@Table(name = "T_TDSPW_PGR_CONSULTA")
 public class Consulta {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_consulta")
     private Long id;
-
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "id_paciente", nullable = false)
     private Paciente paciente;
-
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "id_profissional", nullable = false)
     private Profissional profissional;
-
-    @ManyToOne
-    @JoinColumn(name = "id_usuario_agendador")
     private Usuario usuarioAgendador;
-
-    @Column(name = "data_hora", nullable = false)
     private LocalDateTime dataHora;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "tipo_consulta", nullable = false, length = 20)
     private TipoConsulta tipoConsulta;
-
-    @Column(name = "link_acesso", length = 255)
     private String linkAcesso;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private StatusConsulta status = StatusConsulta.AGENDADA;
-
-    @Column(name = "criado_em")
+    private StatusConsulta status;
     private LocalDateTime criadoEm;
 
-    @PrePersist
-    void prePersist() {
-        this.criadoEm = LocalDateTime.now();
+    public Consulta() {
+    }
+
+    public Consulta(Long id, Paciente paciente, Profissional profissional, Usuario usuarioAgendador,
+            LocalDateTime dataHora, TipoConsulta tipoConsulta, String linkAcesso, StatusConsulta status,
+            LocalDateTime criadoEm) {
+        this.id = id;
+        this.paciente = paciente;
+        this.profissional = profissional;
+        this.usuarioAgendador = usuarioAgendador;
+        this.dataHora = dataHora;
+        this.tipoConsulta = tipoConsulta;
+        this.linkAcesso = linkAcesso;
+        this.status = status;
+        this.criadoEm = criadoEm;
     }
 
     public Long getId() {

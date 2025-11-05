@@ -1,51 +1,32 @@
-package br.com.pmg.hc.model;
+﻿package br.com.pmg.hc.model;
 
 import java.time.LocalDate;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
-
-@Entity
-@Table(name = "T_TDSPW_PGR_PACIENTE")
 public class Paciente {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_paciente")
     private Long id;
-
-    @OneToOne(optional = false, cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "id_usuario", unique = true, nullable = false)
     private Usuario usuario;
-
-    @Column(nullable = false, unique = true, length = 11)
     private String cpf;
-
-    @Enumerated(EnumType.STRING)
-    @Column(length = 1)
     private Sexo sexo;
-
-    @Column(name = "dt_nascimento", nullable = false)
     private LocalDate dataNascimento;
-
-    @Column(length = 15)
     private String telefone;
-
-    @Column(length = 100)
     private String cidade;
+    private StatusCadastro status;
 
-    @Enumerated(EnumType.STRING)
-    @Column(length = 20)
-    private StatusCadastro status = StatusCadastro.ATIVO;
+    public Paciente() {
+    }
+
+    public Paciente(Long id, Usuario usuario, String cpf, Sexo sexo, LocalDate dataNascimento,
+            String telefone, String cidade, StatusCadastro status) {
+        this.id = id;
+        this.usuario = usuario;
+        this.cpf = cpf;
+        this.sexo = sexo;
+        this.dataNascimento = dataNascimento;
+        this.telefone = telefone;
+        this.cidade = cidade;
+        this.status = status;
+    }
 
     public Long getId() {
         return id;

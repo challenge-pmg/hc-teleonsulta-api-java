@@ -1,41 +1,22 @@
-package br.com.pmg.hc.model;
+﻿package br.com.pmg.hc.model;
 
 import java.time.LocalDateTime;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
-
-@Entity
-@Table(name = "T_TDSPW_PGR_ACESSO_TELECONSULTA")
 public class AcessoTeleconsulta {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_acesso")
     private Long id;
-
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "id_consulta", nullable = false)
     private Consulta consulta;
-
-    @Column(name = "horario_acesso")
     private LocalDateTime horarioAcesso;
-
-    @Column(length = 50)
     private String resultado;
 
-    @PrePersist
-    void prePersist() {
-        if (this.horarioAcesso == null) {
-            this.horarioAcesso = LocalDateTime.now();
-        }
+    public AcessoTeleconsulta() {
+    }
+
+    public AcessoTeleconsulta(Long id, Consulta consulta, LocalDateTime horarioAcesso, String resultado) {
+        this.id = id;
+        this.consulta = consulta;
+        this.horarioAcesso = horarioAcesso;
+        this.resultado = resultado;
     }
 
     public Long getId() {

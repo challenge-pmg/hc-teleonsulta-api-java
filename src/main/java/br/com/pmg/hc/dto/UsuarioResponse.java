@@ -1,10 +1,10 @@
-package br.com.pmg.hc.dto;
+﻿package br.com.pmg.hc.dto;
 
 import java.time.LocalDateTime;
 
 import br.com.pmg.hc.model.Role;
 
-public record UsuarioResumo(
+public record UsuarioResponse(
         Long id,
         String nome,
         String email,

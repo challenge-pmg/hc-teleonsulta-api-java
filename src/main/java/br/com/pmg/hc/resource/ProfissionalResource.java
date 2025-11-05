@@ -5,15 +5,14 @@ import java.util.List;
 
 import br.com.pmg.hc.dto.ProfissionalRequest;
 import br.com.pmg.hc.dto.ProfissionalResponse;
-import br.com.pmg.hc.model.Usuario;
+import br.com.pmg.hc.model.TipoProfissionalSaude;
 import br.com.pmg.hc.service.ProfissionalService;
-import br.com.pmg.hc.service.UsuarioService;
+import br.com.pmg.hc.service.TipoProfissionalSaudeService;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
-import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
@@ -31,42 +30,41 @@ public class ProfissionalResource {
     ProfissionalService profissionalService;
 
     @Inject
-    UsuarioService usuarioService;
+    TipoProfissionalSaudeService tipoProfissionalSaudeService;
+
+    @GET
+    public List<ProfissionalResponse> listar() {
+        return profissionalService.listarTodos();
+    }
+
+    @GET
+    @Path("/{id}")
+    public ProfissionalResponse buscar(@PathParam("id") Long id) {
+        return profissionalService.buscarPorId(id);
+    }
 
     @POST
-    public Response criar(@HeaderParam("X-Usuario-Id") Long usuarioId, @Valid ProfissionalRequest request) {
-        Usuario solicitante = usuarioService.recuperarUsuarioAutenticado(usuarioId);
-        var response = profissionalService.criar(solicitante, request);
+    public Response criar(@Valid ProfissionalRequest request) {
+        var response = profissionalService.criar(request);
         return Response.created(URI.create("/profissionais/" + response.id())).entity(response).build();
     }
 
     @PUT
     @Path("/{id}")
-    public ProfissionalResponse atualizar(@HeaderParam("X-Usuario-Id") Long usuarioId,
-            @PathParam("id") Long id,
-            @Valid ProfissionalRequest request) {
-        Usuario solicitante = usuarioService.recuperarUsuarioAutenticado(usuarioId);
-        return profissionalService.atualizar(id, solicitante, request);
-    }
-
-    @GET
-    public List<ProfissionalResponse> listar(@HeaderParam("X-Usuario-Id") Long usuarioId) {
-        Usuario solicitante = usuarioService.recuperarUsuarioAutenticado(usuarioId);
-        return profissionalService.listarTodos(solicitante);
-    }
-
-    @GET
-    @Path("/{id}")
-    public ProfissionalResponse buscarPorId(@HeaderParam("X-Usuario-Id") Long usuarioId, @PathParam("id") Long id) {
-        Usuario solicitante = usuarioService.recuperarUsuarioAutenticado(usuarioId);
-        return profissionalService.buscarPorId(id, solicitante);
+    public ProfissionalResponse atualizar(@PathParam("id") Long id, @Valid ProfissionalRequest request) {
+        return profissionalService.atualizar(id, request);
     }
 
     @DELETE
     @Path("/{id}")
-    public Response remover(@HeaderParam("X-Usuario-Id") Long usuarioId, @PathParam("id") Long id) {
-        Usuario solicitante = usuarioService.recuperarUsuarioAutenticado(usuarioId);
-        profissionalService.remover(id, solicitante);
+    public Response remover(@PathParam("id") Long id) {
+        profissionalService.remover(id);
         return Response.noContent().build();
+    }
+
+    @GET
+    @Path("/tipos")
+    public List<TipoProfissionalSaude> listarTipos() {
+        return tipoProfissionalSaudeService.listarTodos();
     }
 }

@@ -1,4 +1,4 @@
-package br.com.pmg.hc.dto;
+﻿package br.com.pmg.hc.dto;
 
 import java.time.LocalDateTime;
 
@@ -7,12 +7,15 @@ import br.com.pmg.hc.model.TipoConsulta;
 
 public record ConsultaResponse(
         Long id,
-        PacienteConsultaResumo paciente,
-        ProfissionalConsultaResumo profissional,
+        Long pacienteId,
+        String pacienteNome,
+        Long profissionalId,
+        String profissionalNome,
+        Long usuarioAgendadorId,
+        String usuarioAgendadorNome,
         LocalDateTime dataHora,
         TipoConsulta tipoConsulta,
         String linkAcesso,
         StatusConsulta status,
-        Long usuarioAgendadorId,
         LocalDateTime criadoEm) {
 }

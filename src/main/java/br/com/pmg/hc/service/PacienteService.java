@@ -1,4 +1,4 @@
-package br.com.pmg.hc.service;
+﻿package br.com.pmg.hc.service;
 
 import java.util.List;
 
@@ -7,15 +7,13 @@ import br.com.pmg.hc.dao.PacienteDAO;
 import br.com.pmg.hc.dao.UsuarioDAO;
 import br.com.pmg.hc.dto.PacienteRequest;
 import br.com.pmg.hc.dto.PacienteResponse;
-import br.com.pmg.hc.dto.UsuarioResumo;
 import br.com.pmg.hc.exception.BusinessException;
 import br.com.pmg.hc.exception.ResourceNotFoundException;
 import br.com.pmg.hc.model.Paciente;
-import br.com.pmg.hc.model.Role;
+import br.com.pmg.hc.model.StatusCadastro;
 import br.com.pmg.hc.model.Usuario;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
 
 @ApplicationScoped
 public class PacienteService {
@@ -29,18 +27,28 @@ public class PacienteService {
     @Inject
     ConsultaDAO consultaDAO;
 
-    @Transactional
-    public PacienteResponse criar(Usuario solicitante, PacienteRequest request) {
-        garantirRole(solicitante, Role.ADMIN);
-        validarEmailDisponivel(request.email(), null);
-        validarCpfDisponivel(request.cpf(), null);
+    public List<PacienteResponse> listarTodos() {
+        return pacienteDAO.findAll().stream().map(this::toResponse).toList();
+    }
+
+    public PacienteResponse buscarPorId(Long id) {
+        var paciente = pacienteDAO.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));
+        return toResponse(paciente);
+    }
+
+    public PacienteResponse criar(PacienteRequest request) {
+        usuarioDAO.findByEmail(request.email()).ifPresent(u -> {
+            throw new BusinessException("Já existe um usuário com este e-mail");
+        });
+        pacienteDAO.findByCpf(request.cpf()).ifPresent(p -> {
+            throw new BusinessException("Já existe um paciente com este CPF");
+        });
 
         var usuario = new Usuario();
         usuario.setNome(request.nome());
         usuario.setEmail(request.email());
         usuario.setSenha(request.senha());
-        usuario.setRole(Role.PACIENTE);
-        usuarioDAO.persist(usuario);
 
         var paciente = new Paciente();
         paciente.setUsuario(usuario);
@@ -49,21 +57,27 @@ public class PacienteService {
         paciente.setDataNascimento(request.dataNascimento());
         paciente.setTelefone(request.telefone());
         paciente.setCidade(request.cidade());
-        if (request.status() != null) {
-            paciente.setStatus(request.status());
-        }
+        paciente.setStatus(request.status() != null ? request.status() : StatusCadastro.ATIVO);
 
-        pacienteDAO.persist(paciente);
+        paciente = pacienteDAO.create(paciente);
         return toResponse(paciente);
     }
 
-    @Transactional
-    public PacienteResponse atualizar(Long id, Usuario solicitante, PacienteRequest request) {
-        var paciente = obterPaciente(id);
-        garantirRolePacienteOuAdmin(solicitante, paciente);
+    public PacienteResponse atualizar(Long id, PacienteRequest request) {
+        var paciente = pacienteDAO.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));
 
-        validarEmailDisponivel(request.email(), paciente.getUsuario().getId());
-        validarCpfDisponivel(request.cpf(), paciente.getId());
+        usuarioDAO.findByEmail(request.email()).ifPresent(usuario -> {
+            if (!usuario.getId().equals(paciente.getUsuario().getId())) {
+                throw new BusinessException("Já existe um usuário com este e-mail");
+            }
+        });
+
+        pacienteDAO.findByCpf(request.cpf()).ifPresent(existing -> {
+            if (!existing.getId().equals(id)) {
+                throw new BusinessException("Já existe um paciente com este CPF");
+            }
+        });
 
         var usuario = paciente.getUsuario();
         usuario.setNome(request.nome());
@@ -75,100 +89,29 @@ public class PacienteService {
         paciente.setDataNascimento(request.dataNascimento());
         paciente.setTelefone(request.telefone());
         paciente.setCidade(request.cidade());
+        paciente.setStatus(request.status() != null ? request.status() : StatusCadastro.ATIVO);
 
-        if (request.status() != null) {
-            garantirRole(solicitante, Role.ADMIN);
-            paciente.setStatus(request.status());
-        }
-
-        var atualizado = pacienteDAO.merge(paciente);
-        usuarioDAO.merge(usuario);
-        return toResponse(atualizado);
-    }
-
-    @Transactional(Transactional.TxType.SUPPORTS)
-    public PacienteResponse buscarPorId(Long id, Usuario solicitante) {
-        var paciente = obterPaciente(id);
-        garantirRolePacienteOuAdmin(solicitante, paciente);
+        paciente = pacienteDAO.update(paciente);
         return toResponse(paciente);
     }
 
-    @Transactional(Transactional.TxType.SUPPORTS)
-    public List<PacienteResponse> listarTodos(Usuario solicitante) {
-        garantirRole(solicitante, Role.ADMIN);
-        return pacienteDAO.findAll().stream().map(this::toResponse).toList();
-    }
-
-    @Transactional
-    public void remover(Long id, Usuario solicitante) {
-        garantirRole(solicitante, Role.ADMIN);
-        var paciente = obterPaciente(id);
-
-        if (consultaDAO.existsByPaciente(paciente.getId())) {
-            throw new BusinessException("Nao e possivel remover o paciente com consultas vinculadas");
+    public void remover(Long id) {
+        if (consultaDAO.existsByPaciente(id)) {
+            throw new BusinessException("Não é possível remover o paciente com consultas vinculadas");
         }
-        if (consultaDAO.existsByUsuarioAgendador(paciente.getUsuario().getId())) {
-            throw new BusinessException("Nao e possivel remover o paciente com consultas agendadas por ele");
-        }
-
-        pacienteDAO.delete(paciente);
-    }
-
-    private Paciente obterPaciente(Long id) {
-        return pacienteDAO.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Paciente nao encontrado"));
-    }
-
-    private void validarEmailDisponivel(String email, Long usuarioAtualId) {
-        usuarioDAO.findByEmail(email).ifPresent(usuarioExistente -> {
-            if (usuarioAtualId == null || !usuarioExistente.getId().equals(usuarioAtualId)) {
-                throw new BusinessException("Ja existe um usuario com este e-mail");
-            }
-        });
-    }
-
-    private void validarCpfDisponivel(String cpf, Long pacienteAtualId) {
-        pacienteDAO.findByCpf(cpf).ifPresent(pacienteExistente -> {
-            if (pacienteAtualId == null || !pacienteExistente.getId().equals(pacienteAtualId)) {
-                throw new BusinessException("Ja existe um paciente com este CPF");
-            }
-        });
-    }
-
-    private void garantirRole(Usuario usuario, Role... rolesPermitidos) {
-        for (var role : rolesPermitidos) {
-            if (usuario.getRole() == role) {
-                return;
-            }
-        }
-        throw new BusinessException("Usuario sem permissao para esta operacao");
-    }
-
-    private void garantirRolePacienteOuAdmin(Usuario solicitante, Paciente paciente) {
-        if (solicitante.getRole() == Role.ADMIN) {
-            return;
-        }
-        if (solicitante.getRole() == Role.PACIENTE && solicitante.getId().equals(paciente.getUsuario().getId())) {
-            return;
-        }
-        throw new BusinessException("Usuario sem permissao para esta operacao");
+        pacienteDAO.delete(id);
     }
 
     private PacienteResponse toResponse(Paciente paciente) {
         var usuario = paciente.getUsuario();
-        var usuarioResumo = new UsuarioResumo(
+        return new PacienteResponse(
+                paciente.getId(),
                 usuario.getId(),
                 usuario.getNome(),
                 usuario.getEmail(),
-                usuario.getRole(),
-                usuario.getCriadoEm());
-
-        return new PacienteResponse(
-                paciente.getId(),
-                usuarioResumo,
-                paciente.getCpf(),
                 paciente.getSexo(),
                 paciente.getDataNascimento(),
+                paciente.getCpf(),
                 paciente.getTelefone(),
                 paciente.getCidade(),
                 paciente.getStatus());

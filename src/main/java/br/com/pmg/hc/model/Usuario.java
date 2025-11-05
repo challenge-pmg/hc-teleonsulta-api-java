@@ -1,45 +1,26 @@
- package br.com.pmg.hc.model;
+﻿package br.com.pmg.hc.model;
 
 import java.time.LocalDateTime;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
-
-@Entity
-@Table(name = "T_TDSPW_PGR_USUARIO")
 public class Usuario {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_usuario")
     private Long id;
-
-    @Column(nullable = false, length = 100)
     private String nome;
-
-    @Column(nullable = false, unique = true, length = 100)
     private String email;
-
-    @Column(nullable = false, length = 255)
     private String senha;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
     private Role role;
-
-    @Column(name = "criado_em", nullable = false)
     private LocalDateTime criadoEm;
 
-    @PrePersist
-    protected void onCreate() {
-        this.criadoEm = LocalDateTime.now();
+    public Usuario() {
+    }
+
+    public Usuario(Long id, String nome, String email, String senha, Role role, LocalDateTime criadoEm) {
+        this.id = id;
+        this.nome = nome;
+        this.email = email;
+        this.senha = senha;
+        this.role = role;
+        this.criadoEm = criadoEm;
     }
 
     public Long getId() {

@@ -9,6 +9,7 @@ import jakarta.validation.constraints.NotNull;
 public record ConsultaRequest(
         @NotNull Long pacienteId,
         @NotNull Long profissionalId,
+        Long usuarioAgendadorId,
         @NotNull @FutureOrPresent LocalDateTime dataHora,
         @NotNull TipoConsulta tipoConsulta,
         String linkAcesso) {

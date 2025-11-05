@@ -1,4 +1,4 @@
-package br.com.pmg.hc.dto;
+﻿package br.com.pmg.hc.dto;
 
 import java.time.LocalDate;
 
@@ -7,10 +7,12 @@ import br.com.pmg.hc.model.StatusCadastro;
 
 public record PacienteResponse(
         Long id,
-        UsuarioResumo usuario,
-        String cpf,
+        Long usuarioId,
+        String nome,
+        String email,
         Sexo sexo,
         LocalDate dataNascimento,
+        String cpf,
         String telefone,
         String cidade,
         StatusCadastro status) {
