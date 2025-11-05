@@ -1,4 +1,4 @@
-﻿package br.com.pmg.hc.dao;
+package br.com.pmg.hc.dao;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

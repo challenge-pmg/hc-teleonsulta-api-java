@@ -1,4 +1,4 @@
-﻿package br.com.pmg.hc.dao;
+package br.com.pmg.hc.dao;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -160,7 +160,7 @@ public class ProfissionalDAO {
                 return Optional.empty();
             }
         } catch (SQLException e) {
-            throw new DatabaseException("Erro ao buscar profissional por usuário", e);
+            throw new DatabaseException("Erro ao buscar profissional por usu?rio", e);
         }
     }
 

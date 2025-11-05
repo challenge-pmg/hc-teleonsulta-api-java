@@ -1,4 +1,4 @@
-﻿package br.com.pmg.hc.dao;
+package br.com.pmg.hc.dao;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -176,7 +176,7 @@ public class PacienteDAO {
                 return Optional.empty();
             }
         } catch (SQLException e) {
-            throw new DatabaseException("Erro ao buscar paciente por usuário", e);
+            throw new DatabaseException("Erro ao buscar paciente por usu?rio", e);
         }
     }
 

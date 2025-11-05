@@ -1,4 +1,4 @@
-﻿package br.com.pmg.hc.model;
+package br.com.pmg.hc.model;
 
 import java.time.LocalDate;
 

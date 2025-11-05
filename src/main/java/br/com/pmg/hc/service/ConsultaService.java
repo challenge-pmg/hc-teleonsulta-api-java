@@ -1,4 +1,4 @@
-﻿package br.com.pmg.hc.service;
+package br.com.pmg.hc.service;
 
 import java.util.List;
 
@@ -41,20 +41,20 @@ public class ConsultaService {
 
     public ConsultaResponse buscarPorId(Long id) {
         var consulta = consultaDAO.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Consulta não encontrada"));
+                .orElseThrow(() -> new ResourceNotFoundException("Consulta n?o encontrada"));
         return toResponse(consulta);
     }
 
     public ConsultaResponse criar(ConsultaRequest request) {
         Paciente paciente = pacienteDAO.findById(request.pacienteId())
-                .orElseThrow(() -> new BusinessException("Paciente informado não existe"));
+                .orElseThrow(() -> new BusinessException("Paciente informado n?o existe"));
         Profissional profissional = profissionalDAO.findById(request.profissionalId())
-                .orElseThrow(() -> new BusinessException("Profissional informado não existe"));
+                .orElseThrow(() -> new BusinessException("Profissional informado n?o existe"));
 
         Usuario usuarioAgendador = null;
         if (request.usuarioAgendadorId() != null) {
             usuarioAgendador = usuarioDAO.findById(request.usuarioAgendadorId())
-                    .orElseThrow(() -> new BusinessException("Usuário agendador não encontrado"));
+                    .orElseThrow(() -> new BusinessException("Usu?rio agendador n?o encontrado"));
         }
 
         validarTipoConsulta(request.tipoConsulta(), request.linkAcesso());
@@ -74,17 +74,17 @@ public class ConsultaService {
 
     public ConsultaResponse atualizar(Long id, ConsultaRequest request) {
         var existente = consultaDAO.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Consulta não encontrada"));
+                .orElseThrow(() -> new ResourceNotFoundException("Consulta n?o encontrada"));
 
         Paciente paciente = pacienteDAO.findById(request.pacienteId())
-                .orElseThrow(() -> new BusinessException("Paciente informado não existe"));
+                .orElseThrow(() -> new BusinessException("Paciente informado n?o existe"));
         Profissional profissional = profissionalDAO.findById(request.profissionalId())
-                .orElseThrow(() -> new BusinessException("Profissional informado não existe"));
+                .orElseThrow(() -> new BusinessException("Profissional informado n?o existe"));
 
         Usuario usuarioAgendador = null;
         if (request.usuarioAgendadorId() != null) {
             usuarioAgendador = usuarioDAO.findById(request.usuarioAgendadorId())
-                    .orElseThrow(() -> new BusinessException("Usuário agendador não encontrado"));
+                    .orElseThrow(() -> new BusinessException("Usu?rio agendador n?o encontrado"));
         }
 
         validarTipoConsulta(request.tipoConsulta(), request.linkAcesso());
@@ -102,7 +102,7 @@ public class ConsultaService {
 
     public ConsultaResponse atualizarStatus(Long id, ConsultaStatusRequest request) {
         consultaDAO.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Consulta não encontrada"));
+                .orElseThrow(() -> new ResourceNotFoundException("Consulta n?o encontrada"));
         consultaDAO.updateStatus(id, request.status());
         return buscarPorId(id);
     }
@@ -113,7 +113,7 @@ public class ConsultaService {
 
     private void validarTipoConsulta(TipoConsulta tipoConsulta, String linkAcesso) {
         if (tipoConsulta == TipoConsulta.PRESENCIAL && linkAcesso != null) {
-            throw new BusinessException("Consultas presenciais não devem possuir link de acesso");
+            throw new BusinessException("Consultas presenciais n?o devem possuir link de acesso");
         }
         if (tipoConsulta == TipoConsulta.TELECONSULTA && (linkAcesso == null || linkAcesso.isBlank())) {
             throw new BusinessException("Consultas de teleconsulta devem informar link de acesso");

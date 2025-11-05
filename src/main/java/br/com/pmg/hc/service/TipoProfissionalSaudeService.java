@@ -1,4 +1,4 @@
-﻿package br.com.pmg.hc.service;
+package br.com.pmg.hc.service;
 
 import java.util.List;
 

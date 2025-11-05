@@ -1,4 +1,4 @@
-﻿package br.com.pmg.hc.model;
+package br.com.pmg.hc.model;
 
 public class Profissional {
 

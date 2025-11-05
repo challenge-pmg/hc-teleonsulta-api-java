@@ -1,4 +1,4 @@
-﻿package br.com.pmg.hc.service;
+package br.com.pmg.hc.service;
 
 import java.util.List;
 
@@ -23,13 +23,13 @@ public class UsuarioService {
 
     public UsuarioResponse buscarPorId(Long id) {
         var usuario = usuarioDAO.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Usu?rio n?o encontrado"));
         return toResponse(usuario);
     }
 
     public UsuarioResponse criar(UsuarioRequest request) {
         usuarioDAO.findByEmail(request.email()).ifPresent(u -> {
-            throw new BusinessException("Já existe um usuário com este e-mail");
+            throw new BusinessException("J? existe um usu?rio com este e-mail");
         });
 
         var usuario = new Usuario();
@@ -44,11 +44,11 @@ public class UsuarioService {
 
     public UsuarioResponse atualizar(Long id, UsuarioRequest request) {
         var usuario = usuarioDAO.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Usu?rio n?o encontrado"));
 
         usuarioDAO.findByEmail(request.email()).ifPresent(existing -> {
             if (!existing.getId().equals(id)) {
-                throw new BusinessException("Já existe um usuário com este e-mail");
+                throw new BusinessException("J? existe um usu?rio com este e-mail");
             }
         });
 

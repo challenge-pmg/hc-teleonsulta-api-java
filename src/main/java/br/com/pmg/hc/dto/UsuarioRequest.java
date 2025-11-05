@@ -1,4 +1,4 @@
-﻿package br.com.pmg.hc.dto;
+package br.com.pmg.hc.dto;
 
 import br.com.pmg.hc.model.Role;
 import jakarta.validation.constraints.Email;

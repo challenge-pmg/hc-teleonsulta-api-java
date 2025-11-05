@@ -1,4 +1,4 @@
-﻿package br.com.pmg.hc.resource;
+package br.com.pmg.hc.resource;
 
 import java.net.URI;
 import java.util.List;

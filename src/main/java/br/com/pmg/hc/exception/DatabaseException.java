@@ -1,4 +1,4 @@
-﻿package br.com.pmg.hc.exception;
+package br.com.pmg.hc.exception;
 
 public class DatabaseException extends RuntimeException {
 
