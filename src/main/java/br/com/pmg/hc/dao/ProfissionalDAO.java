@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -60,16 +59,21 @@ public class ProfissionalDAO {
                     insert into T_TDSPW_PGR_PROFISSIONAL_SAUDE (id_usuario, id_tipo_profissional, crm, status)
                     values (?, ?, ?, ?)
                     """;
-            try (PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setLong(1, usuario.getId());
                 statement.setLong(2, profissional.getTipoProfissional().getId());
                 statement.setString(3, profissional.getCrm());
                 statement.setString(4, profissional.getStatus() != null ? profissional.getStatus().name() : StatusCadastro.ATIVO.name());
                 statement.executeUpdate();
+            }
 
-                try (ResultSet keys = statement.getGeneratedKeys()) {
-                    if (keys.next()) {
-                        profissional.setId(keys.getLong(1));
+            try (PreparedStatement idQuery = connection.prepareStatement("""
+                    select id_profissional from T_TDSPW_PGR_PROFISSIONAL_SAUDE where id_usuario = ?
+                    """)) {
+                idQuery.setLong(1, usuario.getId());
+                try (ResultSet rs = idQuery.executeQuery()) {
+                    if (rs.next()) {
+                        profissional.setId(rs.getLong(1));
                     }
                 }
             }

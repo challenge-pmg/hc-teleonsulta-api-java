@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -59,7 +58,7 @@ public class PacienteDAO {
                     insert into T_TDSPW_PGR_PACIENTE (id_usuario, cpf, sexo, dt_nascimento, telefone, cidade, status)
                     values (?, ?, ?, ?, ?, ?, ?)
                     """;
-            try (PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setLong(1, usuario.getId());
                 statement.setString(2, paciente.getCpf());
                 statement.setString(3, paciente.getSexo() != null ? paciente.getSexo().name() : null);
@@ -72,10 +71,15 @@ public class PacienteDAO {
                 statement.setString(6, paciente.getCidade());
                 statement.setString(7, paciente.getStatus() != null ? paciente.getStatus().name() : StatusCadastro.ATIVO.name());
                 statement.executeUpdate();
+            }
 
-                try (ResultSet keys = statement.getGeneratedKeys()) {
-                    if (keys.next()) {
-                        paciente.setId(keys.getLong(1));
+            try (PreparedStatement idQuery = connection.prepareStatement("""
+                    select id_paciente from T_TDSPW_PGR_PACIENTE where id_usuario = ?
+                    """)) {
+                idQuery.setLong(1, usuario.getId());
+                try (ResultSet rs = idQuery.executeQuery()) {
+                    if (rs.next()) {
+                        paciente.setId(rs.getLong(1));
                     }
                 }
             }

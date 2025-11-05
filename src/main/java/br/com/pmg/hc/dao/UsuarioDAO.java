@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -45,20 +44,25 @@ public class UsuarioDAO {
                 insert into T_TDSPW_PGR_USUARIO (nome, email, senha, role)
                 values (?, ?, ?, ?)
                 """;
-        try (PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, usuario.getNome());
             statement.setString(2, usuario.getEmail());
             statement.setString(3, usuario.getSenha());
             statement.setString(4, usuario.getRole().name());
             statement.executeUpdate();
+        }
 
-            try (ResultSet keys = statement.getGeneratedKeys()) {
-                if (keys.next()) {
-                    usuario.setId(keys.getLong(1));
+        try (PreparedStatement idQuery = connection.prepareStatement("""
+                select id_usuario from T_TDSPW_PGR_USUARIO where upper(email) = ?
+                """)) {
+            idQuery.setString(1, usuario.getEmail().toUpperCase());
+            try (ResultSet rs = idQuery.executeQuery()) {
+                if (rs.next()) {
+                    usuario.setId(rs.getLong(1));
                 }
             }
-            return usuario;
         }
+        return usuario;
     }
 
     public void update(Usuario usuario) {

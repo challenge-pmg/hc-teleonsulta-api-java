@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -85,26 +84,39 @@ public class ConsultaDAO {
                 insert into T_TDSPW_PGR_CONSULTA (id_paciente, id_profissional, id_usuario_agendador, data_hora, tipo_consulta, link_acesso, status)
                 values (?, ?, ?, ?, ?, ?, ?)
                 """;
-        try (Connection connection = dataSource.getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            statement.setLong(1, consulta.getPaciente().getId());
-            statement.setLong(2, consulta.getProfissional().getId());
-            if (consulta.getUsuarioAgendador() != null) {
-                statement.setLong(3, consulta.getUsuarioAgendador().getId());
-            } else {
-                statement.setNull(3, java.sql.Types.NUMERIC);
+        try (Connection connection = dataSource.getConnection()) {
+            connection.setAutoCommit(false);
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setLong(1, consulta.getPaciente().getId());
+                statement.setLong(2, consulta.getProfissional().getId());
+                if (consulta.getUsuarioAgendador() != null) {
+                    statement.setLong(3, consulta.getUsuarioAgendador().getId());
+                } else {
+                    statement.setNull(3, java.sql.Types.NUMERIC);
+                }
+                statement.setTimestamp(4, java.sql.Timestamp.valueOf(consulta.getDataHora()));
+                statement.setString(5, consulta.getTipoConsulta().name());
+                statement.setString(6, consulta.getLinkAcesso());
+                statement.setString(7, consulta.getStatus().name());
+                statement.executeUpdate();
             }
-            statement.setTimestamp(4, java.sql.Timestamp.valueOf(consulta.getDataHora()));
-            statement.setString(5, consulta.getTipoConsulta().name());
-            statement.setString(6, consulta.getLinkAcesso());
-            statement.setString(7, consulta.getStatus().name());
-            statement.executeUpdate();
 
-            try (ResultSet keys = statement.getGeneratedKeys()) {
-                if (keys.next()) {
-                    consulta.setId(keys.getLong(1));
+            try (PreparedStatement idQuery = connection.prepareStatement("""
+                    select id_consulta from T_TDSPW_PGR_CONSULTA
+                    where id_paciente = ? and id_profissional = ? and data_hora = ?
+                    order by id_consulta desc
+                    fetch first 1 row only
+                    """)) {
+                idQuery.setLong(1, consulta.getPaciente().getId());
+                idQuery.setLong(2, consulta.getProfissional().getId());
+                idQuery.setTimestamp(3, java.sql.Timestamp.valueOf(consulta.getDataHora()));
+                try (ResultSet rs = idQuery.executeQuery()) {
+                    if (rs.next()) {
+                        consulta.setId(rs.getLong(1));
+                    }
                 }
             }
+            connection.commit();
             return consulta;
         } catch (SQLException e) {
             throw new DatabaseException("Erro ao criar consulta", e);
