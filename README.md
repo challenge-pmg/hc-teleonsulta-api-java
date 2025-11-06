@@ -44,14 +44,23 @@ db/ddl/
 - Para desenvolvimento local ainda vale `http://localhost:5173`.
 - `src/main/resources/application.properties` ja libera as duas origens; ajuste se a URL mudar.
 
-## Deploy no Render (ou outro host Java)
-1. Confirme que o repositório está atualizado (`git status` limpo, `git push origin main`).
-2. O arquivo `application.properties` já está preparado (`quarkus.http.host=0.0.0.0` e `quarkus.http.port=${PORT:8080}`).
-3. No painel do Render:
-   - **Build Command:** `./mvnw package -DskipTests`
-   - **Start Command:** `java -jar target/quarkus-app/quarkus-run.jar`
-   - Defina as variáveis `DB_USERNAME`, `DB_PASSWORD` (e, se quiser, `QUARKUS_HTTP_CORS_ORIGINS`).
-4. Após o deploy, teste `GET /hello` ou `/q/swagger-ui` no domínio gerado.
+## Deploy com Docker / Render
+1. Gere a imagem localmente:
+   ```bash
+   docker build -t hc-teleconsulta-api .
+   ```
+2. Execute em qualquer host:
+   ```bash
+   docker run -p 8080:8080 \
+     -e DB_USERNAME=rm562312 \
+     -e DB_PASSWORD=fiap25 \
+     hc-teleconsulta-api
+   ```
+3. Para publicar no Render:
+   - Escolha **New → Web Service → Docker**.
+   - Selecione este repositório (branch `main`); o Render usará o `Dockerfile`.
+   - Defina as variáveis `DB_USERNAME`, `DB_PASSWORD` (e outras, se necessário).
+   - Conclua o deploy e teste `GET /hello` ou `/q/swagger-ui` no domínio fornecido.
 
 ## Endpoints principais (Sprint 4)
 - `POST /usuarios`  cadastro de usurios (roles ADMIN, PACIENTE, PROFISSIONAL)
