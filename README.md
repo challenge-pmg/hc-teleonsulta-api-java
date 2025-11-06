@@ -44,6 +44,15 @@ db/ddl/
 - Para desenvolvimento local ainda vale `http://localhost:5173`.
 - `src/main/resources/application.properties` ja libera as duas origens; ajuste se a URL mudar.
 
+## Deploy no Render (ou outro host Java)
+1. Confirme que o repositório está atualizado (`git status` limpo, `git push origin main`).
+2. O arquivo `application.properties` já está preparado (`quarkus.http.host=0.0.0.0` e `quarkus.http.port=${PORT:8080}`).
+3. No painel do Render:
+   - **Build Command:** `./mvnw package -DskipTests`
+   - **Start Command:** `java -jar target/quarkus-app/quarkus-run.jar`
+   - Defina as variáveis `DB_USERNAME`, `DB_PASSWORD` (e, se quiser, `QUARKUS_HTTP_CORS_ORIGINS`).
+4. Após o deploy, teste `GET /hello` ou `/q/swagger-ui` no domínio gerado.
+
 ## Endpoints principais (Sprint 4)
 - `POST /usuarios`  cadastro de usurios (roles ADMIN, PACIENTE, PROFISSIONAL)
 - `CRUD /pacientes`
