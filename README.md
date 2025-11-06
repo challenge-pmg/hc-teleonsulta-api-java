@@ -62,6 +62,22 @@ db/ddl/
    - Defina as variáveis `DB_USERNAME`, `DB_PASSWORD` (e outras, se necessário).
    - Conclua o deploy e teste `GET /hello` ou `/q/swagger-ui` no domínio fornecido.
 
+## Teste / avaliacao com outro Oracle
+- Execute `db/ddl/create_pgr_sprint4.sql` no schema Oracle escolhido (SQL Developer ou SQL*Plus) para criar as tabelas. Use `drop_pgr_sprint4.sql` caso precise limpar antes de recriar.
+- Antes de iniciar a API, defina as variaveis de ambiente:
+  - `DB_USERNAME` e `DB_PASSWORD` para o usuario e senha do schema.
+  - Opcional: `QUARKUS_DATASOURCE_JDBC_URL` se a URL nao for `jdbc:oracle:thin:@//oracle.fiap.com.br:1521/orcl`.
+- Execucao local com Maven:
+  ```bash
+  export DB_USERNAME=usuario_proprio
+  export DB_PASSWORD=senha_propria
+  export QUARKUS_DATASOURCE_JDBC_URL=jdbc:oracle:thin:@//host:porta/service
+  ./mvnw clean quarkus:dev
+  ```
+  No PowerShell, use `$Env:VAR = 'valor'` em vez de `export`.
+- Execucao com Docker/Render: informe as mesmas variaveis na configuracao do container/servico antes de subir a imagem.
+- Com a API no ar, valide `GET /hello`, `GET /q/swagger-ui` e os CRUDs (`/usuarios`, `/pacientes`, `/profissionais`, `/consultas`) em Insomnia ou Postman.
+
 ## Endpoints principais (Sprint 4)
 - `POST /usuarios`  cadastro de usurios (roles ADMIN, PACIENTE, PROFISSIONAL)
 - `CRUD /pacientes`
