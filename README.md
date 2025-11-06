@@ -1,11 +1,11 @@
-# HC Teleconsulta API  Sprint 4
+# HC Teleconsulta API — Sprint 4
 
-API REST em Quarkus responsvel por gerenciar usurios, pacientes, profissionais e consultas do projeto HC Teleconsulta. Todo o escopo est alinhado aos requisitos da Sprint 4 (sem integraes extras ou automaes de migrao).
+API REST em Quarkus responsável por gerenciar usuários, pacientes, profissionais e consultas do projeto HC Teleconsulta. Todo o escopo está alinhado aos requisitos da Sprint 4 (sem integrações extras ou automações de migração).
 
 ## Requisitos
 - Java 21
 - Maven 3.9+
-- Acesso  VPN/whitelist da FIAP para conectar ao Oracle
+- Acesso VPN/whitelist da FIAP para conectar ao Oracle
 
 ## Estrutura do projeto
 ```
@@ -21,28 +21,28 @@ db/ddl/
 ```
 
 ## Banco de Dados (Oracle)
-1. Abrir `db/ddl/create_pgr_sprint4.sql` no SQL Developer (ou SQL*Plus) e executar integralmente.
-2. Caso precise zerar a base, execute `db/ddl/drop_pgr_sprint4.sql` e depois o script de criao novamente.
+1. Abra `db/ddl/create_pgr_sprint4.sql` no SQL Developer (ou SQL*Plus) e execute integralmente.
+2. Caso precise zerar a base, execute `db/ddl/drop_pgr_sprint4.sql` e depois rode o script de criação novamente.
 
-## Execuo local
-1. Ajuste as credenciais em `src/main/resources/application.properties` se necessrio (por padro j apontam para o ambiente da FIAP).
-2. Inicie a aplicao: `./mvnw clean quarkus:dev`
-3. Teste `http://localhost:8080/hello` para checar se o servidor est de p.
-4. Acesse a documentao automtica em `http://localhost:8080/q/swagger-ui`.
+## Execução local
+1. Ajuste as credenciais em `src/main/resources/application.properties` se necessário (por padrão já apontam para o ambiente da FIAP).
+2. Inicie a aplicação: `./mvnw clean quarkus:dev`
+3. Teste `http://localhost:8080/hello` para verificar se o servidor está no ar.
+4. Acesse a documentação automática em `http://localhost:8080/q/swagger-ui`.
 
-## Configuracao de credenciais (Seguranca)
-- O arquivo `application.properties` nao armazena usuario/senha diretamente. Utilize variaveis de ambiente:
+## Configuração de credenciais (Segurança)
+- O arquivo `application.properties` não armazena usuário/senha diretamente. Utilize variáveis de ambiente:
   - `DB_USERNAME`
   - `DB_PASSWORD`
 - Exemplos:
   - **Linux/macOS:** `export DB_USERNAME=rm562312` e `export DB_PASSWORD=fiap25`
   - **Windows PowerShell:** `$Env:DB_USERNAME = 'rm562312'` e `$Env:DB_PASSWORD = 'fiap25'`
-- Em producao, configure as mesmas variaveis no servidor (ou no provedor de hosting) para evitar leaks de credenciais.
+- Em produção, configure as mesmas variáveis no servidor (ou no provedor de hosting) para evitar vazamento de credenciais.
 
 ## CORS e front-end
 - Front-end publicado em `https://hc-teleconsulta-pg.vercel.app/`.
-- Para desenvolvimento local ainda vale `http://localhost:5173`.
-- `src/main/resources/application.properties` ja libera as duas origens; ajuste se a URL mudar.
+- Para desenvolvimento local, utilize `http://localhost:5173`.
+- `src/main/resources/application.properties` já libera as duas origens; ajuste se a URL mudar.
 
 ## Deploy com Docker / Render
 1. Gere a imagem localmente:
@@ -57,17 +57,17 @@ db/ddl/
      hc-teleconsulta-api
    ```
 3. Para publicar no Render:
-   - Escolha **New → Web Service → Docker**.
-   - Selecione este repositório (branch `main`); o Render usará o `Dockerfile`.
+   - Escolha **New -> Web Service -> Docker**.
+   - Selecione este repositório (branch `main`); o Render utilizará o `Dockerfile`.
    - Defina as variáveis `DB_USERNAME`, `DB_PASSWORD` (e outras, se necessário).
    - Conclua o deploy e teste `GET /hello` ou `/q/swagger-ui` no domínio fornecido.
 
-## Teste / avaliacao com outro Oracle
+## Teste / avaliação com outro Oracle
 - Execute `db/ddl/create_pgr_sprint4.sql` no schema Oracle escolhido (SQL Developer ou SQL*Plus) para criar as tabelas. Use `drop_pgr_sprint4.sql` caso precise limpar antes de recriar.
-- Antes de iniciar a API, defina as variaveis de ambiente:
-  - `DB_USERNAME` e `DB_PASSWORD` para o usuario e senha do schema.
-  - Opcional: `QUARKUS_DATASOURCE_JDBC_URL` se a URL nao for `jdbc:oracle:thin:@//oracle.fiap.com.br:1521/orcl`.
-- Execucao local com Maven:
+- Antes de iniciar a API, defina as variáveis de ambiente:
+  - `DB_USERNAME` e `DB_PASSWORD` para o usuário e senha do schema.
+  - Opcional: `QUARKUS_DATASOURCE_JDBC_URL` se a URL não for `jdbc:oracle:thin:@//oracle.fiap.com.br:1521/orcl`.
+- Execução local com Maven:
   ```bash
   export DB_USERNAME=usuario_proprio
   export DB_PASSWORD=senha_propria
@@ -75,14 +75,14 @@ db/ddl/
   ./mvnw clean quarkus:dev
   ```
   No PowerShell, use `$Env:VAR = 'valor'` em vez de `export`.
-- Execucao com Docker/Render: informe as mesmas variaveis na configuracao do container/servico antes de subir a imagem.
-- Com a API no ar, valide `GET /hello`, `GET /q/swagger-ui` e os CRUDs (`/usuarios`, `/pacientes`, `/profissionais`, `/consultas`) em Insomnia ou Postman.
+- Execução com Docker/Render: informe as mesmas variáveis na configuração do container/serviço antes de subir a imagem.
+- Com a API no ar, valide `GET /hello`, `GET /q/swagger-ui` e os CRUDs (`/usuarios`, `/pacientes`, `/profissionais`, `/consultas`) no Insomnia ou Postman.
 
 ## Endpoints principais (Sprint 4)
-- `POST /usuarios`  cadastro de usurios (roles ADMIN, PACIENTE, PROFISSIONAL)
+- `POST /usuarios` — cadastro de usuários (roles ADMIN, PACIENTE, PROFISSIONAL)
 - `CRUD /pacientes`
 - `CRUD /profissionais` + listagem de tipos (`GET /profissionais/tipos`)
-- `CRUD /consultas` + atualizao de status (`PUT /consultas/{id}/status`)
+- `CRUD /consultas` + atualização de status (`PUT /consultas/{id}/status`)
 
 Todos os fluxos utilizam JDBC puro via `DataSource`, respeitando as entidades definidas nos scripts oficiais da sprint.
 
