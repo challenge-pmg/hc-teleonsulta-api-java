@@ -14,6 +14,8 @@ import br.com.pmg.hc.model.Profissional;
 import br.com.pmg.hc.model.StatusCadastro;
 import br.com.pmg.hc.model.TipoProfissionalSaude;
 import br.com.pmg.hc.model.Usuario;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -32,6 +34,9 @@ public class ProfissionalService {
     @Inject
     ConsultaDAO consultaDAO;
 
+    @ConfigProperty(name = "app.profissional.codigo-acesso")
+    String codigoAcessoProfissional;
+
     public List<ProfissionalResponse> listarTodos() {
         return profissionalDAO.findAll().stream().map(this::toResponse).toList();
     }
@@ -43,6 +48,8 @@ public class ProfissionalService {
     }
 
     public ProfissionalResponse criar(ProfissionalRequest request) {
+        validarCodigoFuncionario(request.codigoFuncionario());
+
         usuarioDAO.findByEmail(request.email()).ifPresent(u -> {
             throw new BusinessException("Ja existe um usuario com este e-mail");
         });
@@ -113,6 +120,15 @@ public class ProfissionalService {
         }
 
         profissionalDAO.delete(id);
+    }
+
+    private void validarCodigoFuncionario(String codigoInformado) {
+        if (codigoAcessoProfissional == null || codigoAcessoProfissional.isBlank()) {
+            throw new BusinessException("Codigo de acesso de profissionais nao configurado");
+        }
+        if (codigoInformado == null || !codigoAcessoProfissional.equals(codigoInformado)) {
+            throw new BusinessException("Codigo de acesso invalido para cadastro de profissional");
+        }
     }
 
     private ProfissionalResponse toResponse(Profissional profissional) {

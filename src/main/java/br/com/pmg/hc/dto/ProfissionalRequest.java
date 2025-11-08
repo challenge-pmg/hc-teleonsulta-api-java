@@ -12,5 +12,6 @@ public record ProfissionalRequest(
         @NotBlank @Size(max = 255) String senha,
         @NotNull Long tipoProfissionalId,
         @Size(max = 20) String crm,
-        StatusCadastro status) {
+        StatusCadastro status,
+        @Size(max = 50) String codigoFuncionario) {
 }
