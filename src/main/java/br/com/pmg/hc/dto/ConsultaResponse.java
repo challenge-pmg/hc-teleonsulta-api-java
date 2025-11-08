@@ -11,6 +11,7 @@ public record ConsultaResponse(
         String pacienteNome,
         Long profissionalId,
         String profissionalNome,
+        Long disponibilidadeId,
         Long usuarioAgendadorId,
         String usuarioAgendadorNome,
         LocalDateTime dataHora,

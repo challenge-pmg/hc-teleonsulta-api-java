@@ -6,6 +6,7 @@ import java.util.List;
 import br.com.pmg.hc.dto.ConsultaRequest;
 import br.com.pmg.hc.dto.ConsultaResponse;
 import br.com.pmg.hc.dto.ConsultaStatusRequest;
+import br.com.pmg.hc.exception.BusinessException;
 import br.com.pmg.hc.service.ConsultaService;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -17,6 +18,7 @@ import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
@@ -29,8 +31,14 @@ public class ConsultaResource {
     ConsultaService consultaService;
 
     @GET
-    public List<ConsultaResponse> listar() {
-        return consultaService.listarTodas();
+    public List<ConsultaResponse> listar(@QueryParam("pacienteId") Long pacienteId,
+            @QueryParam("profissionalId") Long profissionalId) {
+        if ((pacienteId == null && profissionalId == null) || (pacienteId != null && profissionalId != null)) {
+            throw new BusinessException("Informe apenas pacienteId ou profissionalId para listar consultas");
+        }
+        return pacienteId != null
+                ? consultaService.listarPorPaciente(pacienteId)
+                : consultaService.listarPorProfissional(profissionalId);
     }
 
     @GET

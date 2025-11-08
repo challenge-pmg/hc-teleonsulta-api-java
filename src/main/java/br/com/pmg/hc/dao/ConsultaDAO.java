@@ -14,11 +14,13 @@ import javax.sql.DataSource;
 
 import br.com.pmg.hc.exception.DatabaseException;
 import br.com.pmg.hc.model.Consulta;
+import br.com.pmg.hc.model.DisponibilidadeAtendimento;
 import br.com.pmg.hc.model.Paciente;
 import br.com.pmg.hc.model.Profissional;
 import br.com.pmg.hc.model.Role;
 import br.com.pmg.hc.model.Sexo;
 import br.com.pmg.hc.model.StatusCadastro;
+import br.com.pmg.hc.model.StatusDisponibilidade;
 import br.com.pmg.hc.model.StatusConsulta;
 import br.com.pmg.hc.model.TipoConsulta;
 import br.com.pmg.hc.model.TipoProfissionalSaude;
@@ -61,6 +63,10 @@ public class ConsultaDAO {
                    pru.senha as profissional_usuario_senha,
                    pru.role as profissional_usuario_role,
                    pru.criado_em as profissional_usuario_criado,
+                   d.id_disponibilidade,
+                   d.data_hora as disponibilidade_data_hora,
+                   d.status as disponibilidade_status,
+                   d.criado_em as disponibilidade_criado,
                    au.id_usuario as agendador_id,
                    au.nome as agendador_nome,
                    au.email as agendador_email,
@@ -73,6 +79,7 @@ public class ConsultaDAO {
                      join T_TDSPW_PGR_PROFISSIONAL_SAUDE pr on pr.id_profissional = c.id_profissional
                      join T_TDSPW_PGR_USUARIO pru on pru.id_usuario = pr.id_usuario
                      join T_TDSPW_PGR_TIPO_PROFISSIONAL_SAUDE tp on tp.id_tipo_profissional = pr.id_tipo_profissional
+                     join T_TDSPW_PGR_DISPONIBILIDADE d on d.id_disponibilidade = c.id_disponibilidade
                      left join T_TDSPW_PGR_USUARIO au on au.id_usuario = c.id_usuario_agendador
             """;
 
@@ -81,23 +88,24 @@ public class ConsultaDAO {
 
     public Consulta create(Consulta consulta) {
         String sql = """
-                insert into T_TDSPW_PGR_CONSULTA (id_paciente, id_profissional, id_usuario_agendador, data_hora, tipo_consulta, link_acesso, status)
-                values (?, ?, ?, ?, ?, ?, ?)
+                insert into T_TDSPW_PGR_CONSULTA (id_paciente, id_profissional, id_disponibilidade, id_usuario_agendador, data_hora, tipo_consulta, link_acesso, status)
+                values (?, ?, ?, ?, ?, ?, ?, ?)
                 """;
         try (Connection connection = dataSource.getConnection()) {
             connection.setAutoCommit(false);
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setLong(1, consulta.getPaciente().getId());
                 statement.setLong(2, consulta.getProfissional().getId());
+                statement.setLong(3, consulta.getDisponibilidade().getId());
                 if (consulta.getUsuarioAgendador() != null) {
-                    statement.setLong(3, consulta.getUsuarioAgendador().getId());
+                    statement.setLong(4, consulta.getUsuarioAgendador().getId());
                 } else {
-                    statement.setNull(3, java.sql.Types.NUMERIC);
+                    statement.setNull(4, java.sql.Types.NUMERIC);
                 }
-                statement.setTimestamp(4, java.sql.Timestamp.valueOf(consulta.getDataHora()));
-                statement.setString(5, consulta.getTipoConsulta().name());
-                statement.setString(6, consulta.getLinkAcesso());
-                statement.setString(7, consulta.getStatus().name());
+                statement.setTimestamp(5, java.sql.Timestamp.valueOf(consulta.getDataHora()));
+                statement.setString(6, consulta.getTipoConsulta().name());
+                statement.setString(7, consulta.getLinkAcesso());
+                statement.setString(8, consulta.getStatus().name());
                 statement.executeUpdate();
             }
 
@@ -128,6 +136,7 @@ public class ConsultaDAO {
                 update T_TDSPW_PGR_CONSULTA
                 set id_paciente = ?,
                     id_profissional = ?,
+                    id_disponibilidade = ?,
                     id_usuario_agendador = ?,
                     data_hora = ?,
                     tipo_consulta = ?,
@@ -138,15 +147,16 @@ public class ConsultaDAO {
                 PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setLong(1, consulta.getPaciente().getId());
             statement.setLong(2, consulta.getProfissional().getId());
+            statement.setLong(3, consulta.getDisponibilidade().getId());
             if (consulta.getUsuarioAgendador() != null) {
-                statement.setLong(3, consulta.getUsuarioAgendador().getId());
+                statement.setLong(4, consulta.getUsuarioAgendador().getId());
             } else {
-                statement.setNull(3, java.sql.Types.NUMERIC);
+                statement.setNull(4, java.sql.Types.NUMERIC);
             }
-            statement.setTimestamp(4, java.sql.Timestamp.valueOf(consulta.getDataHora()));
-            statement.setString(5, consulta.getTipoConsulta().name());
-            statement.setString(6, consulta.getLinkAcesso());
-            statement.setLong(7, consulta.getId());
+            statement.setTimestamp(5, java.sql.Timestamp.valueOf(consulta.getDataHora()));
+            statement.setString(6, consulta.getTipoConsulta().name());
+            statement.setString(7, consulta.getLinkAcesso());
+            statement.setLong(8, consulta.getId());
             statement.executeUpdate();
             return consulta;
         } catch (SQLException e) {
@@ -205,6 +215,40 @@ public class ConsultaDAO {
             return consultas;
         } catch (SQLException e) {
             throw new DatabaseException("Erro ao listar consultas", e);
+        }
+    }
+
+    public List<Consulta> findByPaciente(Long pacienteId) {
+        String sql = BASE_SELECT + " where c.id_paciente = ? order by c.data_hora";
+        try (Connection connection = dataSource.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, pacienteId);
+            try (ResultSet rs = statement.executeQuery()) {
+                List<Consulta> consultas = new ArrayList<>();
+                while (rs.next()) {
+                    consultas.add(mapConsulta(rs));
+                }
+                return consultas;
+            }
+        } catch (SQLException e) {
+            throw new DatabaseException("Erro ao listar consultas do paciente", e);
+        }
+    }
+
+    public List<Consulta> findByProfissional(Long profissionalId) {
+        String sql = BASE_SELECT + " where c.id_profissional = ? order by c.data_hora";
+        try (Connection connection = dataSource.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, profissionalId);
+            try (ResultSet rs = statement.executeQuery()) {
+                List<Consulta> consultas = new ArrayList<>();
+                while (rs.next()) {
+                    consultas.add(mapConsulta(rs));
+                }
+                return consultas;
+            }
+        } catch (SQLException e) {
+            throw new DatabaseException("Erro ao listar consultas do profissional", e);
         }
     }
 
@@ -318,11 +362,21 @@ public class ConsultaDAO {
                 ? rs.getTimestamp("criado_em").toLocalDateTime()
                 : null;
 
+        DisponibilidadeAtendimento disponibilidade = new DisponibilidadeAtendimento(
+                rs.getLong("id_disponibilidade"),
+                profissional,
+                rs.getTimestamp("disponibilidade_data_hora").toLocalDateTime(),
+                StatusDisponibilidade.valueOf(rs.getString("disponibilidade_status")),
+                rs.getTimestamp("disponibilidade_criado") != null
+                        ? rs.getTimestamp("disponibilidade_criado").toLocalDateTime()
+                        : null);
+
         return new Consulta(
                 rs.getLong("id_consulta"),
                 paciente,
                 profissional,
                 agendador,
+                disponibilidade,
                 rs.getTimestamp("data_hora").toLocalDateTime(),
                 tipoConsulta,
                 rs.getString("link_acesso"),

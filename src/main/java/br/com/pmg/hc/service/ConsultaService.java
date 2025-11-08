@@ -12,6 +12,7 @@ import br.com.pmg.hc.dto.ConsultaStatusRequest;
 import br.com.pmg.hc.exception.BusinessException;
 import br.com.pmg.hc.exception.ResourceNotFoundException;
 import br.com.pmg.hc.model.Consulta;
+import br.com.pmg.hc.model.DisponibilidadeAtendimento;
 import br.com.pmg.hc.model.Paciente;
 import br.com.pmg.hc.model.Profissional;
 import br.com.pmg.hc.model.StatusConsulta;
@@ -35,8 +36,19 @@ public class ConsultaService {
     @Inject
     UsuarioDAO usuarioDAO;
 
-    public List<ConsultaResponse> listarTodas() {
-        return consultaDAO.findAll().stream().map(this::toResponse).toList();
+    @Inject
+    DisponibilidadeService disponibilidadeService;
+
+    public List<ConsultaResponse> listarPorPaciente(Long pacienteId) {
+        pacienteDAO.findById(pacienteId)
+                .orElseThrow(() -> new BusinessException("Paciente informado nao existe"));
+        return consultaDAO.findByPaciente(pacienteId).stream().map(this::toResponse).toList();
+    }
+
+    public List<ConsultaResponse> listarPorProfissional(Long profissionalId) {
+        profissionalDAO.findById(profissionalId)
+                .orElseThrow(() -> new BusinessException("Profissional informado nao existe"));
+        return consultaDAO.findByProfissional(profissionalId).stream().map(this::toResponse).toList();
     }
 
     public ConsultaResponse buscarPorId(Long id) {
@@ -59,16 +71,25 @@ public class ConsultaService {
 
         validarTipoConsulta(request.tipoConsulta(), request.linkAcesso());
 
+        DisponibilidadeAtendimento disponibilidade = disponibilidadeService.reservar(request.disponibilidadeId());
+        validarDisponibilidadeDoProfissional(profissional, disponibilidade);
+
         var consulta = new Consulta();
         consulta.setPaciente(paciente);
         consulta.setProfissional(profissional);
+        consulta.setDisponibilidade(disponibilidade);
         consulta.setUsuarioAgendador(usuarioAgendador);
-        consulta.setDataHora(request.dataHora());
+        consulta.setDataHora(disponibilidade.getDataHora());
         consulta.setTipoConsulta(request.tipoConsulta());
         consulta.setLinkAcesso(request.tipoConsulta() == TipoConsulta.TELECONSULTA ? request.linkAcesso() : null);
         consulta.setStatus(StatusConsulta.AGENDADA);
 
-        consulta = consultaDAO.create(consulta);
+        try {
+            consulta = consultaDAO.create(consulta);
+        } catch (RuntimeException e) {
+            disponibilidadeService.liberar(disponibilidade.getId());
+            throw e;
+        }
         return toResponse(consultaDAO.findById(consulta.getId()).orElse(consulta));
     }
 
@@ -89,26 +110,56 @@ public class ConsultaService {
 
         validarTipoConsulta(request.tipoConsulta(), request.linkAcesso());
 
+        DisponibilidadeAtendimento disponibilidadeAtual = existente.getDisponibilidade();
+        DisponibilidadeAtendimento novaDisponibilidade = null;
+        if (!disponibilidadeAtual.getId().equals(request.disponibilidadeId())) {
+            novaDisponibilidade = disponibilidadeService.reservar(request.disponibilidadeId());
+            validarDisponibilidadeDoProfissional(profissional, novaDisponibilidade);
+        }
+
         existente.setPaciente(paciente);
         existente.setProfissional(profissional);
         existente.setUsuarioAgendador(usuarioAgendador);
-        existente.setDataHora(request.dataHora());
         existente.setTipoConsulta(request.tipoConsulta());
         existente.setLinkAcesso(request.tipoConsulta() == TipoConsulta.TELECONSULTA ? request.linkAcesso() : null);
 
-        consultaDAO.update(existente);
+        if (novaDisponibilidade != null) {
+            existente.setDisponibilidade(novaDisponibilidade);
+            existente.setDataHora(novaDisponibilidade.getDataHora());
+        } else {
+            existente.setDataHora(disponibilidadeAtual.getDataHora());
+        }
+
+        try {
+            consultaDAO.update(existente);
+            if (novaDisponibilidade != null) {
+                disponibilidadeService.liberar(disponibilidadeAtual.getId());
+            }
+        } catch (RuntimeException e) {
+            if (novaDisponibilidade != null) {
+                disponibilidadeService.liberar(novaDisponibilidade.getId());
+            }
+            throw e;
+        }
         return toResponse(consultaDAO.findById(id).orElse(existente));
     }
 
     public ConsultaResponse atualizarStatus(Long id, ConsultaStatusRequest request) {
-        consultaDAO.findById(id)
+        var consulta = consultaDAO.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Consulta n?o encontrada"));
-        consultaDAO.updateStatus(id, request.status());
+        StatusConsulta novoStatus = request.status();
+        consultaDAO.updateStatus(id, novoStatus);
+        if (novoStatus == StatusConsulta.CANCELADA && consulta.getStatus() != StatusConsulta.CANCELADA) {
+            disponibilidadeService.liberar(consulta.getDisponibilidade().getId());
+        }
         return buscarPorId(id);
     }
 
     public void remover(Long id) {
+        var consulta = consultaDAO.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Consulta n?o encontrada"));
         consultaDAO.delete(id);
+        disponibilidadeService.liberar(consulta.getDisponibilidade().getId());
     }
 
     private void validarTipoConsulta(TipoConsulta tipoConsulta, String linkAcesso) {
@@ -118,6 +169,15 @@ public class ConsultaService {
         if (tipoConsulta == TipoConsulta.TELECONSULTA && (linkAcesso == null || linkAcesso.isBlank())) {
             throw new BusinessException("Consultas de teleconsulta devem informar link de acesso");
         }
+    }
+
+    private void validarDisponibilidadeDoProfissional(Profissional profissional,
+            DisponibilidadeAtendimento disponibilidade) {
+        if (!disponibilidade.getProfissional().getId().equals(profissional.getId())) {
+            disponibilidadeService.liberar(disponibilidade.getId());
+            throw new BusinessException("Disponibilidade nao pertence ao profissional informado");
+        }
+        disponibilidade.setProfissional(profissional);
     }
 
     private ConsultaResponse toResponse(Consulta consulta) {
@@ -130,6 +190,7 @@ public class ConsultaService {
                 paciente.getUsuario().getNome(),
                 profissional.getId(),
                 profissional.getUsuario().getNome(),
+                consulta.getDisponibilidade().getId(),
                 agendador != null ? agendador.getId() : null,
                 agendador != null ? agendador.getNome() : null,
                 consulta.getDataHora(),

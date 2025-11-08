@@ -8,6 +8,7 @@ public class Consulta {
     private Paciente paciente;
     private Profissional profissional;
     private Usuario usuarioAgendador;
+    private DisponibilidadeAtendimento disponibilidade;
     private LocalDateTime dataHora;
     private TipoConsulta tipoConsulta;
     private String linkAcesso;
@@ -18,12 +19,14 @@ public class Consulta {
     }
 
     public Consulta(Long id, Paciente paciente, Profissional profissional, Usuario usuarioAgendador,
-            LocalDateTime dataHora, TipoConsulta tipoConsulta, String linkAcesso, StatusConsulta status,
+            DisponibilidadeAtendimento disponibilidade, LocalDateTime dataHora,
+            TipoConsulta tipoConsulta, String linkAcesso, StatusConsulta status,
             LocalDateTime criadoEm) {
         this.id = id;
         this.paciente = paciente;
         this.profissional = profissional;
         this.usuarioAgendador = usuarioAgendador;
+        this.disponibilidade = disponibilidade;
         this.dataHora = dataHora;
         this.tipoConsulta = tipoConsulta;
         this.linkAcesso = linkAcesso;
@@ -61,6 +64,14 @@ public class Consulta {
 
     public void setUsuarioAgendador(Usuario usuarioAgendador) {
         this.usuarioAgendador = usuarioAgendador;
+    }
+
+    public DisponibilidadeAtendimento getDisponibilidade() {
+        return disponibilidade;
+    }
+
+    public void setDisponibilidade(DisponibilidadeAtendimento disponibilidade) {
+        this.disponibilidade = disponibilidade;
     }
 
     public LocalDateTime getDataHora() {
