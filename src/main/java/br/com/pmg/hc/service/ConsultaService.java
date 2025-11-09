@@ -1,6 +1,9 @@
 package br.com.pmg.hc.service;
 
 import java.util.List;
+import java.util.UUID;
+
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import br.com.pmg.hc.dao.ConsultaDAO;
 import br.com.pmg.hc.dao.PacienteDAO;
@@ -39,6 +42,9 @@ public class ConsultaService {
     @Inject
     DisponibilidadeService disponibilidadeService;
 
+    @ConfigProperty(name = "app.teleconsulta.base-url", defaultValue = "https://meet.hc.com/")
+    String teleconsultaBaseUrl;
+
     public List<ConsultaResponse> listarPorPaciente(Long pacienteId) {
         pacienteDAO.findById(pacienteId)
                 .orElseThrow(() -> new BusinessException("Paciente informado nao existe"));
@@ -69,8 +75,6 @@ public class ConsultaService {
                     .orElseThrow(() -> new BusinessException("Usu?rio agendador n?o encontrado"));
         }
 
-        validarTipoConsulta(request.tipoConsulta(), request.linkAcesso());
-
         DisponibilidadeAtendimento disponibilidade = disponibilidadeService.reservar(request.disponibilidadeId());
         validarDisponibilidadeDoProfissional(profissional, disponibilidade);
 
@@ -81,7 +85,7 @@ public class ConsultaService {
         consulta.setUsuarioAgendador(usuarioAgendador);
         consulta.setDataHora(disponibilidade.getDataHora());
         consulta.setTipoConsulta(request.tipoConsulta());
-        consulta.setLinkAcesso(request.tipoConsulta() == TipoConsulta.TELECONSULTA ? request.linkAcesso() : null);
+        consulta.setLinkAcesso(gerarLinkSeNecessario(request.tipoConsulta()));
         consulta.setStatus(StatusConsulta.AGENDADA);
 
         try {
@@ -108,8 +112,6 @@ public class ConsultaService {
                     .orElseThrow(() -> new BusinessException("Usu?rio agendador n?o encontrado"));
         }
 
-        validarTipoConsulta(request.tipoConsulta(), request.linkAcesso());
-
         DisponibilidadeAtendimento disponibilidadeAtual = existente.getDisponibilidade();
         DisponibilidadeAtendimento novaDisponibilidade = null;
         if (!disponibilidadeAtual.getId().equals(request.disponibilidadeId())) {
@@ -120,8 +122,15 @@ public class ConsultaService {
         existente.setPaciente(paciente);
         existente.setProfissional(profissional);
         existente.setUsuarioAgendador(usuarioAgendador);
+        TipoConsulta tipoAnterior = existente.getTipoConsulta();
         existente.setTipoConsulta(request.tipoConsulta());
-        existente.setLinkAcesso(request.tipoConsulta() == TipoConsulta.TELECONSULTA ? request.linkAcesso() : null);
+        if (request.tipoConsulta() == TipoConsulta.TELECONSULTA) {
+            if (tipoAnterior != TipoConsulta.TELECONSULTA) {
+                existente.setLinkAcesso(gerarLinkSeNecessario(TipoConsulta.TELECONSULTA));
+            }
+        } else {
+            existente.setLinkAcesso(null);
+        }
 
         if (novaDisponibilidade != null) {
             existente.setDisponibilidade(novaDisponibilidade);
@@ -162,15 +171,6 @@ public class ConsultaService {
         disponibilidadeService.liberar(consulta.getDisponibilidade().getId());
     }
 
-    private void validarTipoConsulta(TipoConsulta tipoConsulta, String linkAcesso) {
-        if (tipoConsulta == TipoConsulta.PRESENCIAL && linkAcesso != null) {
-            throw new BusinessException("Consultas presenciais n?o devem possuir link de acesso");
-        }
-        if (tipoConsulta == TipoConsulta.TELECONSULTA && (linkAcesso == null || linkAcesso.isBlank())) {
-            throw new BusinessException("Consultas de teleconsulta devem informar link de acesso");
-        }
-    }
-
     private void validarDisponibilidadeDoProfissional(Profissional profissional,
             DisponibilidadeAtendimento disponibilidade) {
         if (!disponibilidade.getProfissional().getId().equals(profissional.getId())) {
@@ -178,6 +178,14 @@ public class ConsultaService {
             throw new BusinessException("Disponibilidade nao pertence ao profissional informado");
         }
         disponibilidade.setProfissional(profissional);
+    }
+
+    private String gerarLinkSeNecessario(TipoConsulta tipoConsulta) {
+        if (tipoConsulta != TipoConsulta.TELECONSULTA) {
+            return null;
+        }
+        String base = teleconsultaBaseUrl.endsWith("/") ? teleconsultaBaseUrl : teleconsultaBaseUrl + "/";
+        return base + UUID.randomUUID();
     }
 
     private ConsultaResponse toResponse(Consulta consulta) {

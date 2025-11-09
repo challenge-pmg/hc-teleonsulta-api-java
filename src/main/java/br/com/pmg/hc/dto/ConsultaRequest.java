@@ -8,6 +8,5 @@ public record ConsultaRequest(
         @NotNull Long profissionalId,
         Long usuarioAgendadorId,
         @NotNull Long disponibilidadeId,
-        @NotNull TipoConsulta tipoConsulta,
-        String linkAcesso) {
+        @NotNull TipoConsulta tipoConsulta) {
 }

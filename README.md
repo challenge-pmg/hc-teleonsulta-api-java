@@ -227,7 +227,7 @@ db/ddl/
 
 
 
-- Para agendar, o paciente envia `POST /consultas` com `pacienteId`, `profissionalId`, `disponibilidadeId`, `tipoConsulta` e (quando TELECONSULTA) `linkAcesso`. O backend garante que o slot exista, perten?a ao profissional informado e esteja livre antes de reservar.
+- Para agendar, o paciente envia `POST /consultas` com `pacienteId`, `profissionalId`, `disponibilidadeId` e `tipoConsulta`. Em consultas presenciais o `linkAcesso` � omitido, e em teleconsultas o backend gera automaticamente esse link (base configurada em `app.teleconsulta.base-url`). O backend garante que o slot exista, perten?a ao profissional informado e esteja livre antes de reservar.
 
 
 
