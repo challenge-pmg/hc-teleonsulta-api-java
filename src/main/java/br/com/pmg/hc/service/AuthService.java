@@ -1,5 +1,7 @@
 package br.com.pmg.hc.service;
 
+import org.jboss.logging.Logger;
+
 import br.com.pmg.hc.dao.PacienteDAO;
 import br.com.pmg.hc.dao.ProfissionalDAO;
 import br.com.pmg.hc.dao.UsuarioDAO;
@@ -13,6 +15,8 @@ import jakarta.inject.Inject;
 
 @ApplicationScoped
 public class AuthService {
+
+    private static final Logger LOGGER = Logger.getLogger(AuthService.class);
 
     @Inject
     UsuarioDAO usuarioDAO;
@@ -33,11 +37,19 @@ public class AuthService {
         if (usuario.getRole() == Role.PACIENTE) {
             pacienteId = pacienteDAO.findByUsuarioId(usuario.getId())
                     .map(p -> p.getId())
-                    .orElse(null);
+                    .orElseThrow(() -> {
+                        LOGGER.errorf("Usuario %d (%s) com role PACIENTE sem registro em T_TDSPW_PGR_PACIENTE",
+                                usuario.getId(), usuario.getEmail());
+                        return new BusinessException("Paciente vinculado ao usuario nao foi encontrado");
+                    });
         } else if (usuario.getRole() == Role.PROFISSIONAL) {
             profissionalId = profissionalDAO.findByUsuarioId(usuario.getId())
                     .map(p -> p.getId())
-                    .orElse(null);
+                    .orElseThrow(() -> {
+                        LOGGER.errorf("Usuario %d (%s) com role PROFISSIONAL sem registro em T_TDSPW_PGR_PROFISSIONAL_SAUDE",
+                                usuario.getId(), usuario.getEmail());
+                        return new BusinessException("Profissional vinculado ao usuario nao foi encontrado");
+                    });
         }
 
         return new LoginResponse(

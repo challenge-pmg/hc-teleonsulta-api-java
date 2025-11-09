@@ -195,7 +195,7 @@ public class ConsultaService {
                 agendador != null ? agendador.getNome() : null,
                 consulta.getDataHora(),
                 consulta.getTipoConsulta(),
-                consulta.getTipoConsulta() == TipoConsulta.TELECONSULTA ? consulta.getLinkAcesso() : null,
+                consulta.getLinkAcesso(),
                 consulta.getStatus(),
                 consulta.getCriadoEm());
     }
