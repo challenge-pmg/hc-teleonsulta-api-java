@@ -125,6 +125,8 @@ db/ddl/
        -H "Origin: http://localhost:5173"
   ```
 
+ - **Keep alive / Warmup:** o backend executa um ping peri?dico em `/hello` (configura??es `app.keepalive.*`) e disponibiliza `GET /warmup` para adiantar a inicializa??o do datasource. Ap?s o deploy, rode `curl -X GET https://hc-teleonsulta-api-java-1.onrender.com/warmup` para deixar o datasource pronto.
+
   A resposta deve incluir `Access-Control-Allow-Origin: http://localhost:5173` e os m?todos liberados; se o header n?o aparecer, redeploy o servi?o no Render para aplicar o `application.properties` atual.
 
 ## Deploy com Docker / Render
